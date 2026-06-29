@@ -243,10 +243,34 @@ window.updateBreedingDashboard = function() {
             }
         }
     });
+
+    // 통계 업데이트 및 클릭 이벤트 추가
     document.getElementById('statTotalEggs').innerText = total;
-    document.getElementById('statIncubating').innerText = incubating;
+    document.getElementById('statTotalEggs').parentElement.parentElement.onclick = () => window.filterBreedingTable('all');
+    
     document.getElementById('statHatched').innerText = hatched;
+    document.getElementById('statHatched').parentElement.parentElement.onclick = () => window.filterBreedingTable('hatched');
+    
+    document.getElementById('statIncubating').innerText = incubating;
+    document.getElementById('statIncubating').parentElement.parentElement.onclick = () => window.filterBreedingTable('incubating');
+    
     document.getElementById('statWaiting').innerText = waiting;
+    document.getElementById('statWaiting').parentElement.parentElement.onclick = () => window.filterBreedingTable('waiting');
+};
+
+window.filterBreedingTable = function(filterValue) {
+    // 1. 부화 현황 모니터의 필터 셀렉트박스 값 변경
+    const filterSelect = document.getElementById('eggFilter');
+    filterSelect.value = filterValue;
+    
+    // 2. 테이블 다시 렌더링
+    window.renderBreedingTable();
+    
+    // 3. 사용자 피드백 (선택 사항)
+    window.showToast(`${filterValue === 'all' ? '전체' : (filterValue === 'hatched' ? '해칭완료' : (filterValue === 'incubating' ? '부화중' : '산란대기'))} 목록으로 정렬되었습니다.`);
+    
+    // 4. 테이블 위치로 부드럽게 스크롤
+    document.getElementById('eggTableBody').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 };
 
 window.renderMatrixTable = function(){
@@ -453,14 +477,6 @@ window.openDetailModal = function(id){
     if(g.images&&g.images.length){gallery.innerHTML=g.images.map(img=>`<img src="${img}" alt="gecko">`).join('');gallery.style.display='flex';}
     else gallery.innerHTML=`<div class="w-full h-40 flex flex-col items-center justify-center text-slate-300"><i class="fa-solid fa-image text-3xl mb-2"></i><span class="text-xs">사진 없음</span></div>`;
     
-    document.getElementById('print-name').innerText = g.name;
-    document.getElementById('print-morph').innerText = g.morph || '';
-    const gIcon = g.gender==='수'?'<span class="text-blue-600">♂</span>':(g.gender==='암'?'<span class="text-pink-600">♀</span>':'');
-    document.getElementById('print-gender').innerHTML = gIcon;
-    document.getElementById('print-hatch').innerText = g.hatchDate?formatDisplayDate(g.hatchDate):'미상';
-    document.getElementById('print-weight').innerText = w!==null?w+'g':'-';
-    document.getElementById('print-parents').innerText = parentStr ? `혈통: ${parentStr}` : '';
-
     renderWeightChart(id);
     document.getElementById('geckoDetailModal').classList.remove('hidden');
 };
@@ -470,8 +486,6 @@ window.openEditGecko = function(){ if(currentDetailGeckoId) { const id = current
 window.deleteGecko = function(id){if(confirm("개체와 관련 기록을 삭제할까요?")){window.appData.geckos=window.appData.geckos.filter(g=>g.id!==id);window.appData.logs=window.appData.logs.filter(l=>l.geckoId!==id);window.appData.lineage=window.appData.lineage.filter(l=>l.childId!==id);saveData();window.closeDetailModal();}};
 
 // 네임택 인쇄 및 그래프
-window.printGeckoLabel = function() { window.print(); };
-
 function renderWeightChart(id) {
     const chartContainer = document.getElementById('chart-container');
     const logs = window.appData.logs.filter(l=>l.geckoId===id && l.weight).sort((a,b)=>getSafeDate(a.date)-getSafeDate(b.date));
@@ -772,69 +786,79 @@ window.checkInbreeding = function(){
 };
 
 // ===== 모프 계산기 =====
+const morphCombinations = {
+    "normal-normal": "노멀 100%",
+    "normal-axanthic": "헷 아잔틱 100%",
+    "normal-choco": "헷 초초 100%",
+    "normal-sable": "세이블 50%\n노멀 50%",
+    "normal-hetaxanthic": "헷 아잔틱 50%\n노멀 50%",
+    "normal-hetchoco": "헷 초초 50%\n노멀 50%",
+    "normal-lilysable": "릴리 화이트 50%\n세이블 50%",
+    "normal-supersable": "세이블 100%",
+    "normal-supercappuccino": "카푸치노 100%",
+    "normal-frappuccino": "릴리 화이트 50%\n카푸치노 50%",
+    "hetaxanthic-hetaxanthic": "헷 아잔틱 50%\n아잔틱 25%\n노멀 25%",
+    "axanthic-axanthic": "아잔틱 100%",
+    "axanthic-sable": "세이블 헷 아잔틱 50%\n헷 아잔틱 50%",
+    "axanthic-lilywhite": "릴리 헷 아잔틱 50%\n헷 아잔틱 50%",
+    "axanthic-choco": "헷 아잔틱 헷 초초 100%",
+    "axanthic-supersable": "세이블 헷 아잔틱 100%",
+    "axanthic-lilysable": "릴리 헷 아잔틱 50%\n세이블 헷 아잔틱 50%",
+    "axanthic-frappuccino": "릴리 헷 아잔틱 50%\n카푸치노 헷 아잔틱 50%",
+    "axanthic-hetchoco": "헷 아잔틱 헷 초초 50%\n헷 아잔틱 50%",
+    "choco-choco": "초초 100%",
+    "cappuccino-hetaxanthic": "카푸치노 헷 아잔틱 25%\n헷 아잔틱 25%\n카푸치노 25%\n노멀 25%",
+    "cappuccino-hetchoco": "카푸치노 헷 초초 25%\n헷 초초 25%\n카푸치노 25%\n노멀 25%",
+    "lilywhite-normal": "릴리 화이트 50%\n노멀 50%",
+    "lilywhite-hetaxanthic": "릴리 헷 아잔틱 25%\n헷 아잔틱 25%\n릴리 화이트 25%\n노멀 25%",
+    "lilywhite-hetchoco": "릴리 헷 초초 25%\n헷 초초 25%\n릴리 화이트 25%\n노멀 25%",
+    "lilywhite-frappuccino": "프라푸치노 25%\n릴리 화이트 25%\n슈퍼 릴리 화이트 카푸치노 (치사유전) 12.5%\n슈퍼 릴리 화이트 (치사유전) 12.5%\n카푸치노 12.5%\n노멀 12.5%",
+    "lilywhite-lilysable": "슈퍼 릴리 화이트 (치사유전) 25%\n릴리 세이블 25%\n릴리 화이트 25%\n세이블 25%",
+    "lilywhite-supercappuccino": "프라푸치노 50%\n카푸치노 50%",
+    "lilywhite-supersable": "릴리 세이블 50%\n세이블 50%",
+    "lilywhite-choco": "릴리 화이트 헷 초초 50%\n헷 초초 50%",
+    "lilywhite-lilywhite": "릴리 화이트 50%\n슈퍼 릴리 화이트 (치사유전) 25%\n노멀 25%",
+    "lilywhite-cappuccino": "릴리 화이트 25%\n카푸치노 25%\n프라푸치노 25%\n노멀 25%",
+    "lilywhite-sable": "릴리 세이블 25%\n세이블 25%\n릴리 화이트 25%\n노멀 25%",
+    "cappuccino-cappuccino": "슈퍼 카푸치노 100%",
+    "cappuccino-axanthic": "카푸치노 헷 아잔틱 50%\n헷 아잔틱 50%",
+    "cappuccino-normal": "카푸치노 50%\n노멀 50%",
+    "cappuccino-sable": "루왁 25%\n카푸치노 25%\n세이블 25%\n노멀 25%",
+    "cappuccino-frappuccino": "프라푸치노 25%\n카푸치노 25%\n설악 12.5%\n슈퍼 카푸치노 12.5%\n릴리 화이트 12.5%\n노멀 12.5%",
+    "supercappuccino-cappuccino": "슈퍼 카푸치노 50%\n카푸치노 50%",
+    "hetaxanthic-hetchoco": "헷 아잔틱 헷 초초 25%\n헷 아잔틱 25%\n헷 초초 25%\n노멀 25%",
+    "frappuccino-lilysable": "슈퍼 릴리 화이트 (치사유전) 25%\n프라푸치노 25%\n릴리 세이블 25%\n루왁 25%",
+    "frappuccino-sable": "릴리 화이트 25%\n카푸치노 25%\n릴리 세이블 25%\n루왁 25%",
+    "frappuccino-frappuccino": "프라푸치노 50%\n릴리 화이트 12.5%\n카푸치노 12.5%\n슈퍼 릴리 화이트 (치사유전) 6.25%\n슈퍼 카푸치노 6.25%\n슈퍼 릴리 화이트 슈퍼 카푸치노 (치사유전) 6.25%\n노멀 6.25%",
+    "liljantik-hetaxanthic": "아잔틱 25%\n릴잔틱 25%\n릴리 헷 아잔틱 25%\n헷 아잔틱 25%",
+    "liljantik-axanthic": "아잔틱 50%\n릴잔틱 50%",
+    "liljantik-normal": "릴리 헷 아잔틱 50%\n헷 아잔틱 50%",
+    "choco-hetchoco": "초초 50%\n헷 초초 50%",
+    "choco-cappuccino": "카푸치노 헷 초초 50%\n헷 초초 50%",
+    "choco-frappuccino": "릴리 헷 초초 50%\n카푸치노 헷 초초 50%",
+    "hetaxanthic-sable": "세이블 헷 아잔틱 25%\n헷 아잔틱 25%\n세이블 25%\n노멀 25%",
+    "hetaxanthic-frappuccino": "릴리 헷 아잔틱 25%\n카푸치노 헷 아잔틱 25%\n릴리 화이트 25%\n카푸치노 25%",
+    "hetaxanthic-axanthic": "아잔틱 50%\n헷 아잔틱 50%",
+    "sable-hetchoco": "세이블 헷 초초 25%\n세이블 25%\n헷 초초 25%\n노멀 25%",
+    "sable-sable": "슈퍼 세이블 25%\n세이블 50%\n노멀 25%",
+    "sable-lilysable": "릴리 세이블 25%\n슈퍼 세이블 25%\n릴리 화이트 25%\n 세이블 25%",
+    "sable-hetaxanthic": "세이블 헷 아잔틱 25%\n헷 아잔틱 25%\n세이블 25%\n노멀 25%",
+    "supersable-sable": "슈퍼 세이블 50%\n세이블 50%",
+    "supersable-cappuccino": "루왁 50%\n세이블 50%",
+    "supercappuccino-sable": "루왁 50%\n카푸치노 50%",
+    "supercappuccino-axanthic": "카푸치노 헷 아잔틱 100%",
+    "supercappuccino-choco": "카푸치노 헷 초초 100%",
+    "hetchoco-hetchoco": "초초 25%\n헷 초초 50%\n노멀 25%"
+};
+
 window.runMorphCalculation = function() {
-    function getAlleles(val, type) {
-        if(type === 'lily') { if(val === 'n') return ['n','n']; if(val === 'L') return ['n','L']; }
-        if(type === 'ax') { if(val === 'N') return ['N','N']; if(val === 'H') return ['N','a']; if(val === 'V') return ['a','a']; }
-        if(type === 'cap') { if(val === 'n') return ['n','n']; if(val === 'C') return ['n','C']; if(val === 'F') return ['C','C']; }
-        return [];
-    }
-    
-    const mLily = getAlleles(document.getElementById('calc-m-lily').value, 'lily');
-    const mAx = getAlleles(document.getElementById('calc-m-ax').value, 'ax');
-    const mCap = getAlleles(document.getElementById('calc-m-cap').value, 'cap');
-    
-    const fLily = getAlleles(document.getElementById('calc-f-lily').value, 'lily');
-    const fAx = getAlleles(document.getElementById('calc-f-ax').value, 'ax');
-    const fCap = getAlleles(document.getElementById('calc-f-cap').value, 'cap');
+    const v1 = document.getElementById("morphCalc-parent1").value;
+    const v2 = document.getElementById("morphCalc-parent2").value;
+    const key = `${v1}-${v2}`;
+    const reverseKey = `${v2}-${v1}`;
+    const result = morphCombinations[key] || morphCombinations[reverseKey] || "현재 데이터베이스에 없는 조합입니다.";
 
-    let outcomes = {};
-    let totalViable = 0;
-
-    for(let l1 of mLily) { for(let l2 of fLily) {
-        if(l1 === 'L' && l2 === 'L') continue;
-        for(let a1 of mAx) { for(let a2 of fAx) {
-            for(let c1 of mCap) { for(let c2 of fCap) {
-                let nameParts = [];
-                let isLily = (l1 === 'L' || l2 === 'L');
-                let isAxVis = (a1 === 'a' && a2 === 'a');
-                let isAxHet = ((a1 === 'a' && a2 === 'N') || (a1 === 'N' && a2 === 'a'));
-                let capCount = (c1 === 'C' ? 1 : 0) + (c2 === 'C' ? 1 : 0);
-
-                if(isLily) nameParts.push("릴리화이트");
-                if(capCount === 1) nameParts.push("카푸치노");
-                if(capCount === 2) nameParts.push("프라푸치노");
-                if(isAxVis) nameParts.push("아잔틱");
-                if(nameParts.length === 0) nameParts.push("노멀");
-                if(isAxHet && !isAxVis) nameParts.push("100% 헷 아잔틱");
-
-                let finalName = nameParts.join(' ');
-                outcomes[finalName] = (outcomes[finalName] || 0) + 1;
-                totalViable++;
-            }}
-        }}
-    }}
-
-    let resultsHtml = '';
-    let sortedOutcomes = Object.entries(outcomes).sort((a,b) => b[1] - a[1]);
-    
-    sortedOutcomes.forEach(([name, count]) => {
-        let percent = ((count / totalViable) * 100).toFixed(1);
-        let barWidth = percent;
-        resultsHtml += `
-            <div class="relative pt-1 pb-1">
-                <div class="flex justify-between items-center text-xs mb-1 relative z-10">
-                    <span class="font-bold text-slate-800">${name}</span>
-                    <span class="font-black text-indigo-600">${percent}%</span>
-                </div>
-                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                    <div class="bg-indigo-500 h-1.5 rounded-full" style="width: ${barWidth}%"></div>
-                </div>
-            </div>
-        `;
-    });
-
-    document.getElementById('calc-result-list').innerHTML = resultsHtml;
+    document.getElementById('calc-result-list').innerText = result;
     document.getElementById('calc-result-area').classList.remove('hidden');
 };
 
