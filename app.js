@@ -640,24 +640,27 @@ window.renderBreedingTable = function(){
     processed.forEach(egg=>{
         const sc=egg.state==='hatched'?'bg-slate-100 text-slate-400':(egg.state==='waiting'?'bg-amber-50 text-amber-600':'bg-brand-50 text-brand-600 border-brand-200 border');
         const pulse = (egg.diff >= 0 && egg.diff <= 7) ? 'animate-pulse text-red-600 border-red-200 bg-red-50' : sc;
- h+=`<tr class="hover:bg-slate-50/80"><td class="px-3 py-3 font-semibold"><div class="text-[11px] flex items-center flex-wrap"><span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300 px-1">×</span> <span class="text-pink-500">♀</span>${egg.female}${getClutchBadge(egg.clutch)}</div>${egg.memo?'<div class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[120px]">'+egg.memo+'</div>':''}</td>...
-    });
-    document.getElementById('eggTableBody').innerHTML=h||`<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
-};
-
-window.renderInfertileTable = function(){
-    if(!window.appData.infertileEggs) window.appData.infertileEggs=[];
-    const sortM = document.getElementById('infSort').value;
-    let eggs=[...window.appData.infertileEggs];
-    
-    eggs.sort((a,b) => {
-        if(sortM === 'layDateDesc') return getSafeDate(b.layDate) - getSafeDate(a.layDate);
-        if(sortM === 'created') return b.id - a.id;
-        if(sortM === 'femaleSort') {
-            const comp = (a.female||'').localeCompare(b.female||'');
-            return comp !== 0 ? comp : getSafeDate(b.layDate) - getSafeDate(a.layDate);
-        }
-        return 0;
+        
+        h += `<tr class="hover:bg-slate-50/80">
+            <td class="px-3 py-3 font-semibold">
+                <div class="text-[11px] flex items-center flex-wrap">
+                    <span class="text-blue-500">♂</span>${egg.male} 
+                    <span class="text-slate-300 px-1">×</span> 
+                    <span class="text-pink-500">♀</span>${egg.female} 
+                    ${getClutchBadge(egg.clutch)}
+                </div>
+                ${egg.memo?'<div class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[120px]">'+egg.memo+'</div>':''}
+            </td>
+            <td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(egg.mateDate)}</td>
+            <td class="px-2 py-3 text-center font-bold font-mono whitespace-nowrap ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</td>
+            <td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td>
+            <td class="px-3 py-3 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">${egg.exp}</td>
+            <td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td>
+            <td class="px-2 py-3 text-center space-x-2">
+                <button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+            </td>
+        </tr>`;
     });
 
     let h='';
@@ -665,7 +668,28 @@ window.renderInfertileTable = function(){
         let allDates=[]; window.appData.infertileEggs.filter(e=>e.female===egg.female&&e.layDate).forEach(e=>allDates.push(e.layDate)); window.appData.eggs.filter(e=>e.female===egg.female&&e.layDate).forEach(e=>allDates.push(e.layDate));
         allDates=[...new Set(allDates)].sort((a,b)=>getSafeDate(a)-getSafeDate(b)); const mi=allDates.indexOf(egg.layDate); let iv='-'; if(mi>0){const d=daysBetween(allDates[mi-1],egg.layDate);if(d!==null)iv=d+'일';}
  // 기존 h += ... 줄을 지우고 아래 코드로 덮어쓰세요.
-h+=`<tr class="hover:bg-slate-50/80"><td class="px-3 py-3 font-semibold"><div class="text-[11px] flex items-center flex-wrap"><span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300 px-1">×</span> <span class="text-pink-500">♀</span>${egg.female} ${getClutchBadge(egg.clutch)}</div>${egg.memo?'<div class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[120px]">'+egg.memo+'</div>':''}</td><td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(egg.mateDate)}</td><td class="px-2 py-3 text-center font-bold font-mono whitespace-nowrap ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</td><td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td><td class="px-3 py-3 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">${egg.exp}</td><td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td><td class="px-2 py-3 text-center space-x-2"><button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
+// ... 반복문 시작 부분 (h += ... 있는 곳)
+    h += `<tr class="hover:bg-slate-50/80">
+        <td class="px-3 py-3 font-semibold">
+            <div class="text-[11px] flex items-center flex-wrap">
+                <span class="text-blue-500">♂</span>${egg.male} 
+                <span class="text-slate-300 px-1">×</span> 
+                <span class="text-pink-500">♀</span>${egg.female} 
+                ${getClutchBadge(egg.clutch)}
+            </div>
+            ${egg.memo ? '<div class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[120px]">' + egg.memo + '</div>' : ''}
+        </td>
+        <td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(egg.mateDate)}</td>
+        <td class="px-2 py-3 text-center font-bold font-mono whitespace-nowrap ${egg.layDate ? 'text-slate-700' : 'text-amber-500'}">${egg.layDate ? formatDisplayDate(egg.layDate) : '미산란'}</td>
+        <td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td>
+        <td class="px-3 py-3 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">${egg.exp}</td>
+        <td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td>
+        <td class="px-2 py-3 text-center space-x-2">
+            <button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+        </td>
+    </tr>`;
+    // ... 반복문 끝
     });
     document.getElementById('infertileTableBody').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">무정란 기록 없음</td></tr>`;
 };
