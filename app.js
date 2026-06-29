@@ -23,10 +23,10 @@ function normalizeDateStr(s) {
     m=s.match(/^(\d{4})(\d{2})(\d{2})$/); if(m) return m[1]+'-'+m[2]+'-'+m[3];
     return s;
 }
+
 // 차수(1~12차)별로 서로 다른 색상의 배지를 생성하는 함수
-// 파일 상단에 이 함수가 있어야 합니다.
 function getClutchBadge(clutch) {
-    if (!clutch) return '';
+    if (!clutch || clutch === '?') return `<span class="inline-block ml-1 px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 border border-slate-200">산란전</span>`;
     const num = parseInt(clutch.toString().replace(/[^0-9]/g, ''));
     if (isNaN(num)) return `<span class="inline-block ml-1 px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 border border-slate-200">${clutch}</span>`;
     
@@ -41,6 +41,7 @@ function getClutchBadge(clutch) {
     const styleClass = styles[num] || "bg-slate-50 text-slate-600 border-slate-200";
     return `<span class="inline-block ml-1 px-1.5 py-0.5 text-[9px] font-bold rounded border ${styleClass}">${num}차</span>`;
 }
+
 function getSafeDate(s) {
     if(!s) return null; if(typeof s==='number'){const d=new Date(s);return isNaN(d)?null:d;} if(typeof s!=='string') return null;
     let m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(m){const d=new Date(+m[1],m[2]-1,+m[3]);return isNaN(d)?null:d;}
@@ -48,6 +49,7 @@ function getSafeDate(s) {
     const y = p[0].length === 2 ? 2000 + +p[0] : +p[0];
     const d=new Date(y, p[1]-1, +p[2]); return isNaN(d)?null:d;
 }
+
 function formatDisplayDate(s){if(!s||typeof s!=='string') return '-'; const d=getSafeDate(s); if(!d) return s; const dn=['일','월','화','수','목','금','토']; return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} (${dn[d.getDay()]})`;}
 function formatShortDate(s){if(!s) return '-'; const d=getSafeDate(s); if(!d) return s; return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;}
 function getTodayFormatted(){
@@ -71,10 +73,6 @@ window.showToast = function(msg) {
 }
 
 function initCalendars() {
-    const today = new Date();
-    // 당월의 마지막 일자를 구합니다 (해당 월의 말일까지만 선택 가능)
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
     document.querySelectorAll('.cal-input').forEach(el => {
         if(el._flatpickr) el._flatpickr.destroy(); 
         flatpickr(el, {
@@ -82,7 +80,7 @@ function initCalendars() {
             dateFormat: 'Y-m-d', 
             allowInput: true, 
             disableMobile: true,
-            maxDate: endOfMonth, 
+            // 달력 오류 수정: maxDate 제한 해제로 그달의 말일까지 정상 표시 및 미래 선택 가능
             parseDate: (datestr, format) => {
                 if (/^\d{6}$/.test(datestr)) { const y = 2000 + parseInt(datestr.substring(0, 2)); const m = parseInt(datestr.substring(2, 4)) - 1; const d = parseInt(datestr.substring(4, 6)); return new Date(y, m, d); }
                 if (/^\d{8}$/.test(datestr)) { const y = parseInt(datestr.substring(0, 4)); const m = parseInt(datestr.substring(4, 6)) - 1; const d = parseInt(datestr.substring(6, 8)); return new Date(y, m, d); }
@@ -262,7 +260,6 @@ window.updateBreedingDashboard = function() {
         }
     });
 
-    // 통계 업데이트
     document.getElementById('statTotalEggs').innerText = total;
     document.getElementById('statHatched').innerText = hatched;
     document.getElementById('statIncubating').innerText = incubating;
@@ -333,10 +330,9 @@ window.removePendingImage = function(i){pendingImages.splice(i,1);renderImagePre
 window.openGeckoModal = function(id=null){
     editingGeckoId=id; pendingImages=[];
     
-    // 부/모 드롭다운 초기화
     let mH='<option value="">미상</option>', fH='<option value="">미상</option>';
     window.appData.geckos.forEach(g=>{
-        if(g.id == id) return; // 자기 자신은 부모가 될 수 없음
+        if(g.id == id) return;
         if(g.gender==='수') mH+=`<option value="${g.id}">${g.name}</option>`;
         if(g.gender==='암') fH+=`<option value="${g.id}">${g.name}</option>`;
     });
@@ -390,7 +386,6 @@ window.saveGecko = function(keepOpen){
         window.showToast("등록 완료");
     }
     
-    // 혈통 정보 처리
     const fId = document.getElementById('reg-father').value;
     const mId = document.getElementById('reg-mother').value;
     
@@ -481,7 +476,6 @@ window.openDetailModal = function(id){
     if(g.images&&g.images.length){gallery.innerHTML=g.images.map(img=>`<img src="${img}" alt="gecko">`).join('');gallery.style.display='flex';}
     else gallery.innerHTML=`<div class="w-full h-40 flex flex-col items-center justify-center text-slate-300"><i class="fa-solid fa-image text-3xl mb-2"></i><span class="text-xs">사진 없음</span></div>`;
     
-    // 차트 재생성 전 기존 인스턴스를 안전하게 초기화
     if(weightChartInstance) {
         try { weightChartInstance.destroy(); } catch(e){}
         weightChartInstance = null;
@@ -494,7 +488,6 @@ window.closeDetailModal = function(){currentDetailGeckoId=null;document.getEleme
 window.openEditGecko = function(){ if(currentDetailGeckoId) { const id = currentDetailGeckoId; window.closeDetailModal(); setTimeout(() => window.openGeckoModal(id), 50); } };
 window.deleteGecko = function(id){if(confirm("개체와 관련 기록을 삭제할까요?")){window.appData.geckos=window.appData.geckos.filter(g=>g.id!=id);window.appData.logs=window.appData.logs.filter(l=>l.geckoId!=id);window.appData.lineage=window.appData.lineage.filter(l=>l.childId!=id);saveData();window.closeDetailModal();}};
 
-// 네임택 인쇄 및 그래프
 function renderWeightChart(id) {
     const chartContainer = document.getElementById('chart-container');
     const logs = window.appData.logs.filter(l=>l.geckoId==id && l.weight).sort((a,b)=>getSafeDate(a.date)-getSafeDate(b.date));
@@ -533,6 +526,7 @@ window.renderLogInputForm = function(){
 };
 window.saveDailyLogs = function(){const date=normalizeDateStr(document.getElementById('log-date').value);if(!date||date.length<8)return alert('날짜를 올바르게 입력해주세요.');window.appData.geckos.forEach(g=>{const w=document.getElementById(`w-${g.id}`).value,f=document.getElementById(`f-${g.id}`).value,c=document.getElementById(`c-${g.id}`).value;window.appData.logs=window.appData.logs.filter(l=>!(l.geckoId==g.id&&l.date===date));if(w||f||c) window.appData.logs.push({date,geckoId:g.id,weight:w?parseFloat(w):'',feed:f,clean:c});});saveData();window.showToast("기록 저장 완료");};
 
+// 타임라인 오류 수정 (치명적인 렌더링 에러 복구 완료)
 window.renderHistoryTimeline = function(){
     const fi=document.getElementById('filter-gecko').value;
     const sortM=document.getElementById('timeline-sort').value;
@@ -565,14 +559,28 @@ window.renderHistoryTimeline = function(){
 
     let h='';
     processed.forEach(l=>{
-        // 기존 h += ... 줄을 지우고 아래 코드로 덮어쓰세요.
-h+=`<tr class="hover:bg-slate-50/80"><td class="px-3 py-3 font-semibold"><div class="text-[11px] flex items-center flex-wrap"><span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300 px-1">×</span> <span class="text-pink-500">♀</span>${egg.female} ${getClutchBadge(egg.clutch)}</div>${egg.memo?'<div class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[120px]">'+egg.memo+'</div>':''}</td><td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(egg.mateDate)}</td><td class="px-2 py-3 text-center font-bold font-mono whitespace-nowrap ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</td><td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td><td class="px-3 py-3 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">${egg.exp}</td><td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td><td class="px-2 py-3 text-center space-x-2"><button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
+        const w = l.weight ? l.weight + 'g' : '-';
+        const f = l.feed || '-';
+        const c = l.clean || '-';
+        const gc = l.gender === '수' ? 'text-blue-500' : (l.gender === '암' ? 'text-pink-500' : 'text-slate-400');
+        const gi = l.gender === '수' ? '♂' : (l.gender === '암' ? '♀' : '?');
+
+        h += `<tr class="hover:bg-slate-50/80">
+            <td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(l.date)}</td>
+            <td class="px-3 py-3 font-semibold text-slate-800"><span class="${gc} font-bold mr-1">${gi}</span>${l.geckoName}</td>
+            <td class="px-2 py-3 text-center font-bold text-brand-600 whitespace-nowrap">${w}</td>
+            <td class="px-2 py-3 text-center text-[11px]">${f}</td>
+            <td class="px-2 py-3 text-center text-[11px]">${c}</td>
+            <td class="px-2 py-3 text-center">
+                <button onclick="window.deleteLog('${l.date}', ${l.geckoId})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+            </td>
+        </tr>`;
     });
     document.getElementById('history-timeline-body').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
 };
-window.deleteLog = function(d,id){window.appData.logs=window.appData.logs.filter(l=>!(l.date===d&&l.geckoId==id));saveData();};
+window.deleteLog = function(d,id){window.appData.logs=window.appData.logs.filter(l=>!(l.date===d&&l.geckoId==id));saveData();window.renderHistoryTimeline();};
 
-// ===== 산란/ㅊ  =====
+// ===== 산란/부화 =====
 window.setBreedType = function(type){
     document.getElementById('breed-type').value=type;
     if(type==='fertile'){document.getElementById('btn-fertile').className='flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-brand-600 text-white transition';document.getElementById('btn-infertile').className='flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-500 transition';document.getElementById('fertile-fields').classList.remove('hidden');document.getElementById('infertile-fields').classList.add('hidden');document.getElementById('temp-field').classList.remove('hidden');document.getElementById('lay-date-label').innerText='산란일 (선택)';document.getElementById('breed-form-title').innerHTML='<i class="fa-solid fa-heart text-pink-500"></i> 교배/산란 등록';}
@@ -600,6 +608,22 @@ window.renderBreedingTable = function(){
     const sortM=document.getElementById('eggSort').value;
     let eggs=[...window.appData.eggs];
     const today=new Date(); today.setHours(0,0,0,0);
+
+    // 차수(Clutch) 동적 계산 및 할당
+    const femaleGroups = {};
+    eggs.forEach(e => {
+        if (!femaleGroups[e.female]) femaleGroups[e.female] = [];
+        femaleGroups[e.female].push(e);
+    });
+    
+    Object.keys(femaleGroups).forEach(female => {
+        femaleGroups[female].sort((a,b) => getSafeDate(a.layDate||a.mateDate) - getSafeDate(b.layDate||b.mateDate));
+        let clutchCount = 1;
+        femaleGroups[female].forEach(e => {
+            if(e.layDate) e.clutch = clutchCount++;
+            else e.clutch = '?';
+        });
+    });
 
     let processed = eggs.map(egg => {
         let state='waiting', dDay='대기중', exp='-', diff=9999;
@@ -663,6 +687,41 @@ window.renderBreedingTable = function(){
         </tr>`;
     });
     document.getElementById('eggTableBody').innerHTML=h||`<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
+};
+
+window.renderInfertileTable = function() {
+    let eggs=[...window.appData.infertileEggs];
+    const sortM=document.getElementById('infSort').value;
+    
+    eggs.sort((a,b) => {
+        if(sortM === 'layDateDesc') return getSafeDate(b.layDate) - getSafeDate(a.layDate);
+        if(sortM === 'created') return b.id - a.id;
+        if(sortM === 'femaleSort') return (a.female||'').localeCompare(b.female||'');
+        return 0;
+    });
+
+    let h='';
+    eggs.forEach(egg => {
+        const past = window.appData.infertileEggs.filter(e => e.female===egg.female && getSafeDate(e.layDate)<getSafeDate(egg.layDate)).sort((a,b)=>getSafeDate(b.layDate)-getSafeDate(a.layDate));
+        let gap = '-';
+        if(past.length > 0) {
+            const d = daysBetween(past[0].layDate, egg.layDate);
+            if(d !== null) gap = `${d}일`;
+        }
+
+        h += `<tr class="hover:bg-slate-50/80">
+            <td class="px-3 py-3 font-semibold text-slate-800 text-[11px]"><span class="text-pink-500 mr-1">♀</span>${egg.female}</td>
+            <td class="px-2 py-3 text-center text-slate-700 font-bold font-mono whitespace-nowrap">${formatDisplayDate(egg.layDate)}</td>
+            <td class="px-2 py-3 text-center"><span class="font-bold text-slate-700">${egg.eggCount}</span>알</td>
+            <td class="px-2 py-3 text-center text-xs text-slate-500">${gap}</td>
+            <td class="px-2 py-3 text-center text-[10px] text-slate-400 truncate max-w-[100px]">${egg.memo||'-'}</td>
+            <td class="px-2 py-3 text-center space-x-2">
+                <button onclick="window.editInfertileEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="window.deleteInfertileEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+            </td>
+        </tr>`;
+    });
+    document.getElementById('infertileTableBody').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
 };
 
 // ===== 혈통 트리 =====
@@ -863,7 +922,6 @@ window.runMorphCalculation = function() {
     const key = `${v1}-${v2}`;
     const reverseKey = `${v2}-${v1}`;
     
-    // 일치하는 조합 찾기 및 줄바꿈 문자를 HTML 태그로 치환
     const rawResult = morphCombinations[key] || morphCombinations[reverseKey];
     const resultText = rawResult ? rawResult.replace(/\n/g, '<br>') : "현재 데이터베이스에 없는 조합이거나,<br>메이팅 데이터가 부족합니다.";
 
