@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebas
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// 글로벌 변수 설정
 const defaultData = { geckos:[], logs:[], eggs:[], infertileEggs:[], lineage:[] };
 window.appData = { ...defaultData };
 window.db = null;
@@ -14,7 +13,6 @@ let currentDetailGeckoId = null;
 let viewMode = 'grid';
 let weightChartInstance = null;
 
-// ===== 유틸리티 함수 =====
 function normalizeDateStr(s) {
     if(!s||typeof s!=='string') return s||'';
     let m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(m) return s;
@@ -24,20 +22,11 @@ function normalizeDateStr(s) {
     return s;
 }
 
-// 차수(1~12차)별로 서로 다른 색상의 배지를 생성하는 함수
 function getClutchBadge(clutch) {
     if (!clutch || clutch === '?') return `<span class="inline-block ml-1 px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 border border-slate-200">산란전</span>`;
     const num = parseInt(clutch.toString().replace(/[^0-9]/g, ''));
     if (isNaN(num)) return `<span class="inline-block ml-1 px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 border border-slate-200">${clutch}</span>`;
-    
-    const styles = {
-        1: "bg-red-50 text-red-600 border-red-200", 2: "bg-orange-50 text-orange-600 border-orange-200",
-        3: "bg-amber-50 text-amber-600 border-amber-200", 4: "bg-yellow-50 text-yellow-600 border-yellow-200",
-        5: "bg-lime-50 text-lime-600 border-lime-200", 6: "bg-green-50 text-green-600 border-green-200",
-        7: "bg-emerald-50 text-emerald-600 border-emerald-200", 8: "bg-teal-50 text-teal-600 border-teal-200",
-        9: "bg-sky-50 text-sky-600 border-sky-200", 10: "bg-blue-50 text-blue-600 border-blue-200",
-        11: "bg-purple-50 text-purple-600 border-purple-200", 12: "bg-pink-50 text-pink-600 border-pink-200"
-    };
+    const styles = { 1:"bg-red-50 text-red-600 border-red-200", 2:"bg-orange-50 text-orange-600 border-orange-200", 3:"bg-amber-50 text-amber-600 border-amber-200", 4:"bg-yellow-50 text-yellow-600 border-yellow-200", 5:"bg-lime-50 text-lime-600 border-lime-200", 6:"bg-green-50 text-green-600 border-green-200", 7:"bg-emerald-50 text-emerald-600 border-emerald-200", 8:"bg-teal-50 text-teal-600 border-teal-200", 9:"bg-sky-50 text-sky-600 border-sky-200", 10:"bg-blue-50 text-blue-600 border-blue-200", 11:"bg-purple-50 text-purple-600 border-purple-200", 12:"bg-pink-50 text-pink-600 border-pink-200" };
     const styleClass = styles[num] || "bg-slate-50 text-slate-600 border-slate-200";
     return `<span class="inline-block ml-1 px-1.5 py-0.5 text-[9px] font-bold rounded border ${styleClass}">${num}차</span>`;
 }
@@ -52,10 +41,7 @@ function getSafeDate(s) {
 
 function formatDisplayDate(s){if(!s||typeof s!=='string') return '-'; const d=getSafeDate(s); if(!d) return s; const dn=['일','월','화','수','목','금','토']; return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} (${dn[d.getDay()]})`;}
 function formatShortDate(s){if(!s) return '-'; const d=getSafeDate(s); if(!d) return s; return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;}
-function getTodayFormatted(){
-    const d=new Date(); 
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
+function getTodayFormatted(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function daysBetween(a,b){const x=getSafeDate(a),y=getSafeDate(b); return(x&&y)?Math.round((y-x)/864e5):null;}
 function getLastWeight(id){const l=window.appData.logs.filter(x=>x.geckoId===id&&x.weight).sort((a,b)=>getSafeDate(b.date)-getSafeDate(a.date)); return l.length?parseFloat(l[0].weight):null;}
 function getLastCareSummary(id){const l=window.appData.logs.filter(x=>x.geckoId===id).sort((a,b)=>getSafeDate(b.date)-getSafeDate(a.date)); if(!l.length) return {date:null,summary:''}; const r=l[0]; let p=[]; if(r.feed)p.push(r.feed); if(r.clean)p.push(r.clean); return {date:r.date,summary:p.join(', ')||'무게만'};}
@@ -66,21 +52,14 @@ window.showToast = function(msg) {
     document.getElementById('toastMsg').innerText=msg;
     t.classList.remove('hidden');
     setTimeout(()=>t.classList.remove('opacity-0'),10);
-    setTimeout(()=>{
-        t.classList.add('opacity-0');
-        setTimeout(()=>t.classList.add('hidden'),300);
-    }, 2500);
+    setTimeout(()=>{ t.classList.add('opacity-0'); setTimeout(()=>t.classList.add('hidden'),300); }, 2500);
 }
 
 function initCalendars() {
     document.querySelectorAll('.cal-input').forEach(el => {
         if(el._flatpickr) el._flatpickr.destroy(); 
         flatpickr(el, {
-            locale: 'ko', 
-            dateFormat: 'Y-m-d', 
-            allowInput: true, 
-            disableMobile: true,
-            // 달력 오류 수정: maxDate 제한 해제로 그달의 말일까지 정상 표시 및 미래 선택 가능
+            locale: 'ko', dateFormat: 'Y-m-d', allowInput: true, disableMobile: true,
             parseDate: (datestr, format) => {
                 if (/^\d{6}$/.test(datestr)) { const y = 2000 + parseInt(datestr.substring(0, 2)); const m = parseInt(datestr.substring(2, 4)) - 1; const d = parseInt(datestr.substring(4, 6)); return new Date(y, m, d); }
                 if (/^\d{8}$/.test(datestr)) { const y = parseInt(datestr.substring(0, 4)); const m = parseInt(datestr.substring(4, 6)) - 1; const d = parseInt(datestr.substring(6, 8)); return new Date(y, m, d); }
@@ -90,19 +69,13 @@ function initCalendars() {
     });
 }
 
-// ===== 메인 초기화 =====
 window.onload = function() {
     const local = localStorage.getItem('gecko_integrated_data');
-    if(local) {
-        try { window.appData={...defaultData,...JSON.parse(local)}; }
-        catch(e) { window.appData={...defaultData}; }
-    } else {
-        window.appData={...defaultData};
-    }
+    if(local) { try { window.appData={...defaultData,...JSON.parse(local)}; } catch(e) { window.appData={...defaultData}; } } 
+    else { window.appData={...defaultData}; }
     
     ['infertileEggs','lineage'].forEach(k=>{if(!window.appData[k]) window.appData[k]=[];});
     
-    // 데이터 업그레이드
     window.appData.logs.forEach(l => l.date = normalizeDateStr(l.date));
     window.appData.geckos.forEach(g => g.hatchDate = normalizeDateStr(g.hatchDate));
     window.appData.eggs.forEach(e => { e.layDate = normalizeDateStr(e.layDate); e.mateDate = normalizeDateStr(e.mateDate); });
@@ -123,38 +96,19 @@ window.onload = function() {
     const regImagesEl = document.getElementById('reg-images');
     if(regImagesEl) regImagesEl.addEventListener('change', handleImageUpload);
     
-    window.refreshAllViews(); 
-    initCalendars();
+    window.refreshAllViews(); initCalendars();
 };
 
-window.refreshAllViews = function() {
-    window.updateDashboardStats(); 
-    window.populateBreedingYears(); 
-    window.updateBreedingDashboard(); 
-    window.renderMatrixTable(); 
-    window.renderGeckos(); 
-    window.populateDropdowns(); 
-    window.populateLineageDropdowns(); 
-    window.renderLogInputForm(); 
-    window.renderHistoryTimeline(); 
-    window.renderBreedingTable(); 
-    window.renderInfertileTable(); 
-    window.renderLineageList();
-};
+window.refreshAllViews = function() { window.updateDashboardStats(); window.populateBreedingYears(); window.updateBreedingDashboard(); window.renderMatrixTable(); window.renderGeckos(); window.populateDropdowns(); window.populateLineageDropdowns(); window.renderLogInputForm(); window.renderHistoryTimeline(); window.renderBreedingTable(); window.renderInfertileTable(); window.renderLineageList(); };
 
-function saveData() {
-    localStorage.setItem('gecko_integrated_data', JSON.stringify(window.appData)); 
-    if(window.syncToCloud) window.syncToCloud(); 
-    window.refreshAllViews();
-}
+function saveData() { localStorage.setItem('gecko_integrated_data', JSON.stringify(window.appData)); if(window.syncToCloud) window.syncToCloud(); window.refreshAllViews(); }
 
 window.switchTab = function(id) {
     document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
     document.getElementById(`tab-${id}`).classList.add('active');
     document.querySelectorAll('.nav-btn').forEach(el=>{el.classList.remove('border-brand-600','text-brand-600','font-bold');el.classList.add('border-transparent','text-slate-500','font-semibold');});
     const b=document.getElementById(`nav-${id}`); if(b){b.classList.remove('border-transparent','text-slate-500','font-semibold');b.classList.add('border-brand-600','text-brand-600','font-bold');}
-    document.getElementById('main-scroll-area').scrollTo(0,0); 
-    setTimeout(initCalendars,100);
+    document.getElementById('main-scroll-area').scrollTo(0,0); setTimeout(initCalendars,100);
 };
 
 window.navigateToGeckos = function(type,wc){window.switchTab('geckos'); if(type==='weight') document.getElementById('gecko-sort').value='weight-desc'; else if(type!=='all') document.getElementById('gecko-sort').value=type; window.renderGeckos(wc||null);}
@@ -166,15 +120,11 @@ window.openMorphCalcModal = function() { document.getElementById('morphCalcModal
 window.closeMorphCalcModal = function() { document.getElementById('morphCalcModal').classList.add('hidden'); document.getElementById('calc-result-area').classList.add('hidden'); }
 window.triggerClearAll = function() {
     if(confirm("정말로 모든 데이터를 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) {
-        localStorage.removeItem('gecko_integrated_data');
-        window.appData = { ...defaultData };
-        if(window.syncToCloud) window.syncToCloud();
-        window.refreshAllViews();
-        window.showToast("모든 데이터가 초기화되었습니다.");
+        localStorage.removeItem('gecko_integrated_data'); window.appData = { ...defaultData };
+        if(window.syncToCloud) window.syncToCloud(); window.refreshAllViews(); window.showToast("모든 데이터가 초기화되었습니다.");
     }
 }
 
-// ===== Firebase =====
 window.initFirebase = async function(configStr, code) {
     try {
         const config = JSON.parse(configStr); const app = initializeApp(config); const auth = getAuth(app);
@@ -189,7 +139,6 @@ window.syncToCloud = async function() {
     try { window.isUploading = true; await setDoc(doc(window.db, 'integrated_gecko_app', code), window.appData); setTimeout(() => { window.isUploading = false; }, 1000); } catch(e) { window.isUploading = false; }
 };
 
-// ===== Dashboard =====
 window.updateDashboardStats = function(){
     document.getElementById('stat-total').innerText=window.appData.geckos.length;
     document.getElementById('stat-m').innerText=window.appData.geckos.filter(g=>g.gender==='수').length;
@@ -197,40 +146,25 @@ window.updateDashboardStats = function(){
     document.getElementById('stat-u').innerText=window.appData.geckos.filter(g=>g.gender==='미구분').length;
     let ac={baby:0,juv:0,sub:0,adult:0}; window.appData.geckos.forEach(g=>{const w=getLastWeight(g.id); if(w!==null){if(w<5)ac.baby++;else if(w<15)ac.juv++;else if(w<25)ac.sub++;else ac.adult++;}});
     document.getElementById('stat-baby').innerText=ac.baby; document.getElementById('stat-juv').innerText=ac.juv; document.getElementById('stat-sub').innerText=ac.sub; document.getElementById('stat-adult').innerText=ac.adult;
-    
     let latestGlobalDate = getTodayFormatted();
-    if (window.appData.logs.length > 0) {
-        const dates = window.appData.logs.map(l => l.date).filter(Boolean).sort((a,b) => getSafeDate(b) - getSafeDate(a));
-        if(dates.length > 0) latestGlobalDate = dates[0];
-    }
+    if (window.appData.logs.length > 0) { const dates = window.appData.logs.map(l => l.date).filter(Boolean).sort((a,b) => getSafeDate(b) - getSafeDate(a)); if(dates.length > 0) latestGlobalDate = dates[0]; }
     document.getElementById('stat-recent-date').innerText = `(${formatShortDate(latestGlobalDate)} 기준)`;
-
-    let mf=0,mc=0;
-    window.appData.geckos.forEach(g=>{
-        const l=window.appData.logs.find(x=>x.geckoId===g.id&&x.date===latestGlobalDate);
-        if(!l||!l.feed)mf++; 
-        if(!l||!l.clean)mc++;
-    });
+    let mf=0,mc=0; window.appData.geckos.forEach(g=>{ const l=window.appData.logs.find(x=>x.geckoId===g.id&&x.date===latestGlobalDate); if(!l||!l.feed)mf++; if(!l||!l.clean)mc++; });
     document.getElementById('stat-missed-feed').innerText=mf; document.getElementById('stat-missed-clean').innerText=mc;
-    
     let ls=0,hs=0; const today=new Date();today.setHours(0,0,0,0);
     window.appData.eggs.forEach(egg=>{if(!egg.layDate&&egg.mateDate){const m=getSafeDate(egg.mateDate);if(m){const e=new Date(m);e.setDate(e.getDate()+30);const d=(e-today)/864e5;if(d<=7&&d>-14)ls++;}}else if(egg.layDate){const l=getSafeDate(egg.layDate);if(l){const days=Math.round(72-(parseFloat(egg.targetTemp)-24)*10);const h=new Date(l);h.setDate(h.getDate()+days);const d=(h-today)/864e5;if(d<=7&&d>=0)hs++;}}});
     document.getElementById('stat-lay-soon').innerText=ls; document.getElementById('stat-hatch-soon').innerText=hs;
 };
 
 window.populateBreedingYears = function() {
-    const select = document.getElementById('breed-dashboard-period');
-    if(!select) return;
+    const select = document.getElementById('breed-dashboard-period'); if(!select) return;
     const currentVal = select.value || new Date().getFullYear().toString();
     let years = new Set();
     window.appData.eggs.forEach(e => { const d = getSafeDate(e.layDate || e.mateDate); if(d) years.add(d.getFullYear().toString()); });
     window.appData.infertileEggs.forEach(e => { const d = getSafeDate(e.layDate); if(d) years.add(d.getFullYear().toString()); });
-    const currYearStr = new Date().getFullYear().toString();
-    years.add(currYearStr);
-    let yearsArr = Array.from(years).sort((a,b)=>b-a);
-    let html = '<option value="all">전체보기</option>';
-    yearsArr.forEach(y => { html += `<option value="${y}">${y}년</option>`; });
-    select.innerHTML = html;
+    const currYearStr = new Date().getFullYear().toString(); years.add(currYearStr);
+    let yearsArr = Array.from(years).sort((a,b)=>b-a); let html = '<option value="all">전체보기</option>';
+    yearsArr.forEach(y => { html += `<option value="${y}">${y}년</option>`; }); select.innerHTML = html;
     if(yearsArr.includes(currentVal) || currentVal === 'all') select.value = currentVal; else select.value = currYearStr;
 };
 
@@ -238,67 +172,36 @@ window.updateBreedingDashboard = function() {
     const period = document.getElementById('breed-dashboard-period').value;
     const today = new Date(); today.setHours(0,0,0,0);
     let total=0, incubating=0, hatched=0, waiting=0;
-    
     window.appData.eggs.forEach(egg => {
         const count = parseInt(egg.eggCount) || 0;
         let targetDateStr = egg.layDate || egg.mateDate;
-        if(period !== 'all' && targetDateStr) {
-            const d = getSafeDate(targetDateStr);
-            if(!d || d.getFullYear().toString() !== period) return;
-        }
+        if(period !== 'all' && targetDateStr) { const d = getSafeDate(targetDateStr); if(!d || d.getFullYear().toString() !== period) return; }
         total += count;
         if (!egg.layDate) waiting += 1;
-        else {
-            const days = Math.round(72 - (parseFloat(egg.targetTemp) - 24.0) * 10);
-            const l = getSafeDate(egg.layDate);
-            if(l) {
-                const hd = new Date(l); hd.setDate(hd.getDate() + days);
-                const diff = Math.round((hd - today)/864e5);
-                if (diff < 0) hatched += count;
-                else incubating += count;
-            }
-        }
+        else { const days = Math.round(72 - (parseFloat(egg.targetTemp) - 24.0) * 10); const l = getSafeDate(egg.layDate); if(l) { const hd = new Date(l); hd.setDate(hd.getDate() + days); const diff = Math.round((hd - today)/864e5); if (diff < 0) hatched += count; else incubating += count; } }
     });
-
-    document.getElementById('statTotalEggs').innerText = total;
-    document.getElementById('statHatched').innerText = hatched;
-    document.getElementById('statIncubating').innerText = incubating;
-    document.getElementById('statWaiting').innerText = waiting;
+    document.getElementById('statTotalEggs').innerText = total; document.getElementById('statHatched').innerText = hatched; document.getElementById('statIncubating').innerText = incubating; document.getElementById('statWaiting').innerText = waiting;
 };
 
 window.filterBreedingTable = function(filterValue) {
-    const filterSelect = document.getElementById('eggFilter');
-    if(filterSelect) filterSelect.value = filterValue;
-    window.renderBreedingTable();
-    
-    const msg = filterValue === 'all' ? '전체' : (filterValue === 'hatched' ? '해칭완료' : (filterValue === 'incubating' ? '부화중' : '산란대기'));
-    window.showToast(`${msg} 목록으로 정렬되었습니다.`);
-    document.getElementById('eggTableBody').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const filterSelect = document.getElementById('eggFilter'); if(filterSelect) filterSelect.value = filterValue;
+    window.renderBreedingTable(); const msg = filterValue === 'all' ? '전체' : (filterValue === 'hatched' ? '해칭완료' : (filterValue === 'incubating' ? '부화중' : '산란대기'));
+    window.showToast(`${msg} 목록으로 정렬되었습니다.`); document.getElementById('eggTableBody').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 };
 
 window.renderMatrixTable = function(){
-    const allDates=[...new Set(window.appData.logs.map(l=>l.date))].sort((a,b)=>getSafeDate(a)-getSafeDate(b));
-    const displayDates = allDates.slice(-5);
+    const allDates=[...new Set(window.appData.logs.map(l=>l.date))].sort((a,b)=>getSafeDate(a)-getSafeDate(b)); const displayDates = allDates.slice(-5);
     if(displayDates.length === 0) { document.getElementById('matrix-table').innerHTML = '<tr><td class="p-4 text-slate-400">기록이 없습니다.</td></tr>'; return; }
-    
     let h=`<thead><tr class="bg-slate-100/50 text-slate-500 font-semibold border-b border-slate-200"><th class="py-2.5 px-2">개체명</th>`;
     displayDates.forEach(d=>h+=`<th class="py-2.5 px-2 text-brand-700">${formatDisplayDate(d)}</th>`);
     h+=`</tr></thead><tbody class="divide-y divide-slate-100">`;
     window.appData.geckos.forEach(g=>{
         h+=`<tr><td class="py-3 px-2 font-bold text-slate-800 whitespace-nowrap">${g.name} <span class="text-[10px] text-slate-400">(${g.gender})</span></td>`;
         displayDates.forEach(d=>{
-            const l=window.appData.logs.find(x=>x.geckoId===g.id&&x.date===d);
-            let diffHtml = '';
+            const l=window.appData.logs.find(x=>x.geckoId===g.id&&x.date===d); let diffHtml = '';
             if(l && l.weight) {
                 const pastLogs = window.appData.logs.filter(x=>x.geckoId===g.id && getSafeDate(x.date)<getSafeDate(d) && x.weight).sort((a,b)=>getSafeDate(b.date)-getSafeDate(a.date));
-                if(pastLogs.length > 0) {
-                    const diff = (parseFloat(l.weight) - parseFloat(pastLogs[0].weight)).toFixed(1);
-                    if(diff !== "0.0") {
-                        const color = diff > 0 ? 'text-red-500' : 'text-blue-500';
-                        const sign = diff > 0 ? '+' : '';
-                        diffHtml = `<span class="text-[9px] ${color} ml-1">(${sign}${diff}g)</span>`;
-                    }
-                }
+                if(pastLogs.length > 0) { const diff = (parseFloat(l.weight) - parseFloat(pastLogs[0].weight)).toFixed(1); if(diff !== "0.0") { const color = diff > 0 ? 'text-red-500' : 'text-blue-500'; const sign = diff > 0 ? '+' : ''; diffHtml = `<span class="text-[9px] ${color} ml-1">(${sign}${diff}g)</span>`; } }
             }
             h+=l?`<td class="py-3 px-2 text-xs"><div class="font-bold text-slate-700">${l.weight?l.weight+'g':'-'} ${diffHtml}</div><div class="text-[10px] mt-0.5"><span class="text-emerald-500">${l.feed||''}</span>${(l.feed&&l.clean)?'<span class="text-slate-300 mx-0.5">|</span>':''}<span class="text-blue-500">${l.clean||''}</span></div></td>`:`<td class="py-3 px-2 text-[10px] text-slate-300">-</td>`;
         });
@@ -307,7 +210,6 @@ window.renderMatrixTable = function(){
     h+=`</tbody>`; document.getElementById('matrix-table').innerHTML=h;
 };
 
-// ===== 개체 관리 =====
 function getSortedGeckos(wf) {
     const sm=document.getElementById('gecko-sort').value; let sorted=[...window.appData.geckos];
     const go={'수':['수','암','미구분'],'암':['암','수','미구분'],'미구분':['미구분','수','암']};
@@ -316,7 +218,6 @@ function getSortedGeckos(wf) {
     else if(sm==='hatch-desc') sorted.sort((a,b)=>{const da=getSafeDate(a.hatchDate),db=getSafeDate(b.hatchDate);if(!da)return 1;if(!db)return -1;return db-da;});
     else if(sm==='weight-desc') sorted.sort((a,b)=>{const wa=getLastWeight(a.id),wb=getLastWeight(b.id);if(wa===null)return 1;if(wb===null)return -1;return wb-wa;});
     else if(sm==='weight-asc') sorted.sort((a,b)=>{const wa=getLastWeight(a.id),wb=getLastWeight(b.id);if(wa===null)return 1;if(wb===null)return -1;return wa-wb;});
-    
     if(wf) sorted=sorted.filter(g=>{const w=getLastWeight(g.id);if(w===null)return false;if(wf==='baby')return w<5;if(wf==='juv')return w>=5&&w<15;if(wf==='sub')return w>=15&&w<25;if(wf==='adult')return w>=25;return true;});
     return sorted;
 }
@@ -329,44 +230,23 @@ window.removePendingImage = function(i){pendingImages.splice(i,1);renderImagePre
 
 window.openGeckoModal = function(id=null){
     editingGeckoId=id; pendingImages=[];
-    
     let mH='<option value="">미상</option>', fH='<option value="">미상</option>';
-    window.appData.geckos.forEach(g=>{
-        if(g.id == id) return;
-        if(g.gender==='수') mH+=`<option value="${g.id}">${g.name}</option>`;
-        if(g.gender==='암') fH+=`<option value="${g.id}">${g.name}</option>`;
-    });
-    document.getElementById('reg-father').innerHTML = mH;
-    document.getElementById('reg-mother').innerHTML = fH;
+    window.appData.geckos.forEach(g=>{ if(g.id == id) return; if(g.gender==='수') mH+=`<option value="${g.id}">${g.name}</option>`; if(g.gender==='암') fH+=`<option value="${g.id}">${g.name}</option>`; });
+    document.getElementById('reg-father').innerHTML = mH; document.getElementById('reg-mother').innerHTML = fH;
     
     if(id){
         const g=window.appData.geckos.find(x=>x.id==id); 
         document.getElementById('modal-title').innerHTML='<i class="fa-solid fa-pen text-brand-600"></i> 개체 수정'; 
-        document.getElementById('reg-name').value=g.name; 
-        document.getElementById('reg-gender').value=g.gender; 
-        document.getElementById('reg-hatch').value=g.hatchDate; 
-        document.getElementById('reg-morph').value=g.morph; 
-        pendingImages=g.images?[...g.images]:[]; 
-        document.getElementById('btn-save-continue').classList.add('hidden');
-        
+        document.getElementById('reg-name').value=g.name; document.getElementById('reg-gender').value=g.gender; document.getElementById('reg-hatch').value=g.hatchDate; document.getElementById('reg-morph').value=g.morph; 
+        pendingImages=g.images?[...g.images]:[]; document.getElementById('btn-save-continue').classList.add('hidden');
         const lin = window.appData.lineage.find(l=>l.childId==id);
-        if(lin) {
-            document.getElementById('reg-father').value = lin.fatherId || '';
-            document.getElementById('reg-mother').value = lin.motherId || '';
-        }
+        if(lin) { document.getElementById('reg-father').value = lin.fatherId || ''; document.getElementById('reg-mother').value = lin.motherId || ''; }
     } else {
         document.getElementById('modal-title').innerHTML='<i class="fa-solid fa-plus-circle text-brand-600"></i> 개체 등록'; 
-        document.getElementById('reg-name').value=''; 
-        document.getElementById('reg-hatch').value=''; 
-        document.getElementById('reg-morph').value=''; 
-        document.getElementById('reg-father').value=''; 
-        document.getElementById('reg-mother').value=''; 
+        document.getElementById('reg-name').value=''; document.getElementById('reg-hatch').value=''; document.getElementById('reg-morph').value=''; document.getElementById('reg-father').value=''; document.getElementById('reg-mother').value=''; 
         document.getElementById('btn-save-continue').classList.remove('hidden');
     }
-    document.getElementById('reg-images').value=''; 
-    renderImagePreview(); 
-    document.getElementById('geckoModal').classList.remove('hidden'); 
-    setTimeout(initCalendars,50);
+    document.getElementById('reg-images').value=''; renderImagePreview(); document.getElementById('geckoModal').classList.remove('hidden'); setTimeout(initCalendars,50);
 };
 
 window.closeGeckoModal = function(){document.getElementById('geckoModal').classList.add('hidden');};
@@ -374,49 +254,26 @@ window.closeGeckoModal = function(){document.getElementById('geckoModal').classL
 window.saveGecko = function(keepOpen){
     const name=document.getElementById('reg-name').value.trim(); if(!name) return alert('이름을 입력해주세요.');
     const data={name,gender:document.getElementById('reg-gender').value,hatchDate:normalizeDateStr(document.getElementById('reg-hatch').value),morph:document.getElementById('reg-morph').value,images:[...pendingImages]};
-    
     let currentId = editingGeckoId;
-    if(editingGeckoId){
-        const i=window.appData.geckos.findIndex(g=>g.id==editingGeckoId);
-        window.appData.geckos[i]={...window.appData.geckos[i],...data};
-        window.showToast("수정 완료");
-    } else {
-        currentId=window.appData.geckos.length?Math.max(...window.appData.geckos.map(g=>g.id))+1:1;
-        window.appData.geckos.push({id:currentId,...data});
-        window.showToast("등록 완료");
-    }
-    
-    const fId = document.getElementById('reg-father').value;
-    const mId = document.getElementById('reg-mother').value;
-    
+    if(editingGeckoId){ const i=window.appData.geckos.findIndex(g=>g.id==editingGeckoId); window.appData.geckos[i]={...window.appData.geckos[i],...data}; window.showToast("수정 완료"); } 
+    else { currentId=window.appData.geckos.length?Math.max(...window.appData.geckos.map(g=>g.id))+1:1; window.appData.geckos.push({id:currentId,...data}); window.showToast("등록 완료"); }
+    const fId = document.getElementById('reg-father').value; const mId = document.getElementById('reg-mother').value;
     window.appData.lineage = window.appData.lineage.filter(l => l.childId != currentId);
-    if(fId || mId) {
-        window.appData.lineage.push({
-            childId: currentId,
-            fatherId: fId ? parseInt(fId) : null,
-            motherId: mId ? parseInt(mId) : null
-        });
-    }
-
-    saveData(); 
-    if(currentDetailGeckoId) window.openDetailModal(currentDetailGeckoId);
+    if(fId || mId) { window.appData.lineage.push({ childId: currentId, fatherId: fId ? parseInt(fId) : null, motherId: mId ? parseInt(mId) : null }); }
+    saveData(); if(currentDetailGeckoId) window.openDetailModal(currentDetailGeckoId);
     if(keepOpen){document.getElementById('reg-name').value='';document.getElementById('reg-hatch').value='';document.getElementById('reg-images').value='';pendingImages=[];renderImagePreview();document.getElementById('reg-name').focus();}else window.closeGeckoModal();
 };
 
 window.renderGeckos = function(wf){
-    let sorted = getSortedGeckos(wf);
-    let html='';
+    let sorted = getSortedGeckos(wf); let html='';
     sorted.forEach(g=>{
         const w=getLastWeight(g.id), ws=w!==null?w+'g':'기록없음', care=getLastCareSummary(g.id), cd=care.date?formatShortDate(care.date):'-', age=getAge(g.hatchDate);
         const thumb=(g.images&&g.images.length)?g.images[0]:null;
         const thHtml=thumb?`<img src="${thumb}" class="object-cover w-full h-full">`:`<div class="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300 text-3xl"><i class="fa-solid fa-lizard"></i></div>`;
         const gc=g.gender==='수'?'text-blue-500':(g.gender==='암'?'text-pink-500':'text-slate-400'), gi=g.gender==='수'?'♂':(g.gender==='암'?'♀':'?');
-        
         const lin=window.appData.lineage.find(l=>l.childId==g.id);
-        const father=lin?window.appData.geckos.find(x=>x.id==lin.fatherId):null;
-        const mother=lin?window.appData.geckos.find(x=>x.id==lin.motherId):null;
+        const father=lin?window.appData.geckos.find(x=>x.id==lin.fatherId):null; const mother=lin?window.appData.geckos.find(x=>x.id==lin.motherId):null;
         const linInfo=(father||mother)?`<div class="text-[9px] text-purple-500 mt-0.5"><i class="fa-solid fa-sitemap mr-0.5"></i>${father?'♂'+father.name:''}${(father&&mother)?' × ':''}${mother?'♀'+mother.name:''}</div>`:'';
-
         const childrenCount = window.appData.lineage.filter(l=>l.fatherId==g.id||l.motherId==g.id).length;
         let breedInfo = `<span class="text-[10px] text-slate-400 block mb-0.5">성장/상태</span>`;
         if (childrenCount > 0) breedInfo += `<span class="px-1.5 py-0.5 bg-brand-50 text-brand-700 text-[10px] font-bold rounded">자녀 ${childrenCount}마리</span>`;
@@ -426,22 +283,9 @@ window.renderGeckos = function(wf){
         else breedInfo += `<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 text-[10px] font-bold rounded">베이비</span>`;
 
         if(viewMode==='grid'){
-            html+=`<div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden hover:shadow-md transition cursor-pointer group" onclick="window.openDetailModal(${g.id})">
-                <div class="h-32 w-full bg-slate-50 relative border-b border-slate-100">${thHtml}<span class="absolute top-2 right-2 px-2 py-0.5 bg-white/90 backdrop-blur ${gc} text-[10px] font-bold rounded-md shadow-sm">${gi} ${g.gender}</span></div>
-                <div class="p-3 flex flex-col justify-between flex-1"><div><h3 class="text-base font-bold text-slate-800 group-hover:text-brand-600 transition">${g.name}</h3><p class="text-[11px] text-slate-500 mt-0.5"><span class="font-semibold">모프:</span> ${g.morph||'-'}${age?' · <span class="text-slate-400">'+age+'</span>':''}</p>${linInfo}</div>
-                <div class="mt-2 pt-2 border-t border-slate-100 space-y-1"><div class="flex justify-between items-center"><span class="text-xs font-bold text-brand-600"><i class="fa-solid fa-scale-balanced mr-1"></i>${ws}</span><span class="text-[10px] text-slate-400"><i class="fa-regular fa-calendar mr-0.5"></i>${cd}</span></div>${care.summary?'<div class="text-[10px] text-slate-400 truncate">'+care.summary+'</div>':''}</div>
-                <div class="mt-2 flex justify-end"><button type="button" onclick="event.stopPropagation();window.deleteGecko(${g.id})" class="text-slate-300 hover:text-red-500 transition text-xs"><i class="fa-solid fa-trash-can"></i></button></div></div></div>`;
+            html+=`<div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden hover:shadow-md transition cursor-pointer group" onclick="window.openDetailModal(${g.id})"><div class="h-32 w-full bg-slate-50 relative border-b border-slate-100">${thHtml}<span class="absolute top-2 right-2 px-2 py-0.5 bg-white/90 backdrop-blur ${gc} text-[10px] font-bold rounded-md shadow-sm">${gi} ${g.gender}</span></div><div class="p-3 flex flex-col justify-between flex-1"><div><h3 class="text-base font-bold text-slate-800 group-hover:text-brand-600 transition">${g.name}</h3><p class="text-[11px] text-slate-500 mt-0.5"><span class="font-semibold">모프:</span> ${g.morph||'-'}${age?' · <span class="text-slate-400">'+age+'</span>':''}</p>${linInfo}</div><div class="mt-2 pt-2 border-t border-slate-100 space-y-1"><div class="flex justify-between items-center"><span class="text-xs font-bold text-brand-600"><i class="fa-solid fa-scale-balanced mr-1"></i>${ws}</span><span class="text-[10px] text-slate-400"><i class="fa-regular fa-calendar mr-0.5"></i>${cd}</span></div>${care.summary?'<div class="text-[10px] text-slate-400 truncate">'+care.summary+'</div>':''}</div><div class="mt-2 flex justify-end"><button type="button" onclick="event.stopPropagation();window.deleteGecko(${g.id})" class="text-slate-300 hover:text-red-500 transition text-xs"><i class="fa-solid fa-trash-can"></i></button></div></div></div>`;
         } else {
-            html+=`<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex items-center gap-4 hover:shadow-md transition cursor-pointer group" onclick="window.openDetailModal(${g.id})">
-                <div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-slate-100">${thHtml}</div>
-                <div class="flex-1 grid grid-cols-2 md:grid-cols-5 gap-2 items-center">
-                    <div><div class="flex items-center gap-1.5"><h3 class="text-sm font-bold text-slate-800 group-hover:text-brand-600">${g.name}</h3><span class="px-1 py-0.5 bg-slate-100 ${gc} text-[9px] font-bold rounded">${gi}</span></div><p class="text-[10px] text-slate-400 mt-0.5">${g.morph||'-'}</p>${linInfo}</div>
-                    <div class="text-xs text-slate-500"><span class="text-[10px] text-slate-400 block">해칭일</span>${g.hatchDate?formatShortDate(g.hatchDate):'-'}${age?' <span class="text-[9px] text-slate-400">('+age+')</span>':''}</div>
-                    <div class="text-xs">${breedInfo}</div>
-                    <div class="text-xs font-bold text-brand-600"><span class="text-[10px] text-slate-400 block font-normal">최근 무게</span>${ws}</div>
-                    <div class="text-xs text-slate-500"><span class="text-[10px] text-slate-400 block">최근 관리</span>${cd}${care.summary?' <span class="text-[9px] text-slate-400">'+care.summary+'</span>':''}</div>
-                </div>
-                <div class="shrink-0 flex gap-3 px-2"><button type="button" onclick="event.stopPropagation();window.openGeckoModal(${g.id})" class="text-slate-400 hover:text-blue-500 transition"><i class="fa-solid fa-pen"></i></button><button type="button" onclick="event.stopPropagation();window.deleteGecko(${g.id})" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button></div></div>`;
+            html+=`<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex items-center gap-4 hover:shadow-md transition cursor-pointer group" onclick="window.openDetailModal(${g.id})"><div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-slate-100">${thHtml}</div><div class="flex-1 grid grid-cols-2 md:grid-cols-5 gap-2 items-center"><div><div class="flex items-center gap-1.5"><h3 class="text-sm font-bold text-slate-800 group-hover:text-brand-600">${g.name}</h3><span class="px-1 py-0.5 bg-slate-100 ${gc} text-[9px] font-bold rounded">${gi}</span></div><p class="text-[10px] text-slate-400 mt-0.5">${g.morph||'-'}</p>${linInfo}</div><div class="text-xs text-slate-500"><span class="text-[10px] text-slate-400 block">해칭일</span>${g.hatchDate?formatShortDate(g.hatchDate):'-'}${age?' <span class="text-[9px] text-slate-400">('+age+')</span>':''}</div><div class="text-xs">${breedInfo}</div><div class="text-xs font-bold text-brand-600"><span class="text-[10px] text-slate-400 block font-normal">최근 무게</span>${ws}</div><div class="text-xs text-slate-500"><span class="text-[10px] text-slate-400 block">최근 관리</span>${cd}${care.summary?' <span class="text-[9px] text-slate-400">'+care.summary+'</span>':''}</div></div><div class="shrink-0 flex gap-3 px-2"><button type="button" onclick="event.stopPropagation();window.openGeckoModal(${g.id})" class="text-slate-400 hover:text-blue-500 transition"><i class="fa-solid fa-pen"></i></button><button type="button" onclick="event.stopPropagation();window.deleteGecko(${g.id})" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button></div></div>`;
         }
     });
     document.getElementById('gecko-container').innerHTML=html||`<div class="col-span-full py-10 text-center text-slate-400 text-sm">등록된 개체가 없습니다.</div>`;
@@ -450,38 +294,27 @@ window.renderGeckos = function(wf){
 window.openDetailModal = function(id){
     currentDetailGeckoId=id; const g=window.appData.geckos.find(x=>x.id==id); if(!g)return;
     const w=getLastWeight(id), care=getLastCareSummary(id);
-    document.getElementById('detail-name').innerText=g.name; document.getElementById('detail-gender').innerText=g.gender;
-    document.getElementById('detail-morph').innerText=g.morph||'모프 미상'; document.getElementById('detail-hatch').innerText=formatDisplayDate(g.hatchDate)||'-';
-    document.getElementById('detail-weight').innerText=w!==null?w+'g':'기록 없음'; document.getElementById('detail-last-care').innerText=care.date?formatDisplayDate(care.date):'-';
+    document.getElementById('detail-name').innerText=g.name; document.getElementById('detail-gender').innerText=g.gender; document.getElementById('detail-morph').innerText=g.morph||'모프 미상'; document.getElementById('detail-hatch').innerText=formatDisplayDate(g.hatchDate)||'-'; document.getElementById('detail-weight').innerText=w!==null?w+'g':'기록 없음'; document.getElementById('detail-last-care').innerText=care.date?formatDisplayDate(care.date):'-';
     
-    const lin=window.appData.lineage.find(l=>l.childId==id);
-    const linEl=document.getElementById('detail-lineage-info');
-    let parentStr = '';
+    const lin=window.appData.lineage.find(l=>l.childId==id); const linEl=document.getElementById('detail-lineage-info');
     if(lin){
-        const f=lin.fatherId?window.appData.geckos.find(x=>x.id==lin.fatherId):null;
-        const m=lin.motherId?window.appData.geckos.find(x=>x.id==lin.motherId):null;
+        const f=lin.fatherId?window.appData.geckos.find(x=>x.id==lin.fatherId):null; const m=lin.motherId?window.appData.geckos.find(x=>x.id==lin.motherId):null;
         const children=window.appData.lineage.filter(l=>l.fatherId==id||l.motherId==id).map(l=>window.appData.geckos.find(x=>x.id==l.childId)).filter(Boolean);
         let info=`<i class="fa-solid fa-sitemap text-purple-500 mr-1"></i><strong>혈통:</strong> `;
-        if(f) { info+=`아버지 <span class="text-blue-600">${f.name}</span> `; parentStr += `♂${f.name} `; }
-        if(m) { info+=`어머니 <span class="text-pink-600">${m.name}</span>`; parentStr += `♀${m.name}`; }
+        if(f) info+=`아버지 <span class="text-blue-600">${f.name}</span> `; if(m) info+=`어머니 <span class="text-pink-600">${m.name}</span>`;
         if(children.length) info+=`<br><i class="fa-solid fa-baby text-brand-500 mr-1"></i><strong>자녀:</strong> ${children.map(c=>c.name).join(', ')}`;
         linEl.innerHTML=info; linEl.classList.remove('hidden');
     } else {
         const children=window.appData.lineage.filter(l=>l.fatherId==id||l.motherId==id).map(l=>window.appData.geckos.find(x=>x.id==l.childId)).filter(Boolean);
-        if(children.length){linEl.innerHTML=`<i class="fa-solid fa-baby text-brand-500 mr-1"></i><strong>자녀:</strong> ${children.map(c=>c.name).join(', ')}`;linEl.classList.remove('hidden');}
-        else linEl.classList.add('hidden');
+        if(children.length){linEl.innerHTML=`<i class="fa-solid fa-baby text-brand-500 mr-1"></i><strong>자녀:</strong> ${children.map(c=>c.name).join(', ')}`;linEl.classList.remove('hidden');} else linEl.classList.add('hidden');
     }
     
     const gallery=document.getElementById('detail-image-gallery');
     if(g.images&&g.images.length){gallery.innerHTML=g.images.map(img=>`<img src="${img}" alt="gecko">`).join('');gallery.style.display='flex';}
     else gallery.innerHTML=`<div class="w-full h-40 flex flex-col items-center justify-center text-slate-300"><i class="fa-solid fa-image text-3xl mb-2"></i><span class="text-xs">사진 없음</span></div>`;
     
-    if(weightChartInstance) {
-        try { weightChartInstance.destroy(); } catch(e){}
-        weightChartInstance = null;
-    }
-    renderWeightChart(id);
-    document.getElementById('geckoDetailModal').classList.remove('hidden');
+    if(weightChartInstance) { try { weightChartInstance.destroy(); } catch(e){} weightChartInstance = null; }
+    renderWeightChart(id); document.getElementById('geckoDetailModal').classList.remove('hidden');
 };
 
 window.closeDetailModal = function(){currentDetailGeckoId=null;document.getElementById('geckoDetailModal').classList.add('hidden');};
@@ -491,96 +324,58 @@ window.deleteGecko = function(id){if(confirm("개체와 관련 기록을 삭제�
 function renderWeightChart(id) {
     const chartContainer = document.getElementById('chart-container');
     const logs = window.appData.logs.filter(l=>l.geckoId==id && l.weight).sort((a,b)=>getSafeDate(a.date)-getSafeDate(b.date));
-    
-    if(logs.length < 2) {
-        chartContainer.innerHTML = `<h4 class="text-[11px] font-bold text-slate-400 mb-2">체중 변화 추이 (Weight Chart)</h4><div class="w-full h-32 flex items-center justify-center bg-slate-50 rounded-lg text-xs text-slate-400">성장 기록(무게)이 2회 이상 입력되어야 그래프가 표시됩니다.</div>`;
-        return;
-    }
-    
+    if(logs.length < 2) { chartContainer.innerHTML = `<h4 class="text-[11px] font-bold text-slate-400 mb-2">체중 변화 추이 (Weight Chart)</h4><div class="w-full h-32 flex items-center justify-center bg-slate-50 rounded-lg text-xs text-slate-400">성장 기록(무게)이 2회 이상 입력되어야 그래프가 표시됩니다.</div>`; return; }
     chartContainer.innerHTML = `<h4 class="text-[11px] font-bold text-slate-400 mb-2">체중 변화 추이 (Weight Chart)</h4><div id="chart-box" class="w-full h-36"><canvas id="weightChartCanvas"></canvas></div>`;
     const ctx = document.getElementById('weightChartCanvas').getContext('2d');
-    
-    const labels = logs.map(l => formatShortDate(l.date));
-    const data = logs.map(l => parseFloat(l.weight));
-    
-    weightChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: { labels, datasets: [{ label: '체중(g)', data, borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.1)', borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.3 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { suggestedMin: Math.max(0, Math.min(...data)-5) } } }
-    });
+    const labels = logs.map(l => formatShortDate(l.date)); const data = logs.map(l => parseFloat(l.weight));
+    weightChartInstance = new Chart(ctx, { type: 'line', data: { labels, datasets: [{ label: '체중(g)', data, borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.1)', borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { suggestedMin: Math.max(0, Math.min(...data)-5) } } } });
 }
 
-// ===== 성장 기록 =====
 window.populateDropdowns = function(){
     let mH='<option value="">수컷 선택</option>',fH='<option value="">암컷 선택</option>',fA='<option value="">암컷 선택</option>';
     window.appData.geckos.forEach(g=>{if(g.gender==='수')mH+=`<option value="${g.name}">${g.name}</option>`;if(g.gender==='암'){fH+=`<option value="${g.name}">${g.name}</option>`;fA+=`<option value="${g.name}">${g.name}</option>`;}});
     document.getElementById('breed-male').innerHTML=mH; document.getElementById('breed-female').innerHTML=fH; document.getElementById('infertile-female').innerHTML=fA;
     let lH='<option value="all">모든 개체보기</option>'; window.appData.geckos.forEach(g=>lH+=`<option value="${g.id}">${g.name}</option>`); document.getElementById('filter-gecko').innerHTML=lH;
 };
+
 window.renderLogInputForm = function(){
     const date=document.getElementById('log-date').value; let h='';
-    const sortedGeckos = getSortedGeckos();
-    sortedGeckos.forEach(g=>{const l=window.appData.logs.find(x=>x.geckoId==g.id&&x.date===date)||{weight:'',feed:'',clean:''};
+    getSortedGeckos().forEach(g=>{const l=window.appData.logs.find(x=>x.geckoId==g.id&&x.date===date)||{weight:'',feed:'',clean:''};
     h+=`<div class="p-3 bg-slate-50 border border-slate-200 rounded-xl"><div class="text-xs font-bold text-slate-700 mb-2">${g.name} <span class="font-normal text-slate-400">(${g.gender})</span></div><div class="flex gap-2"><input type="number" step="0.01" id="w-${g.id}" value="${l.weight}" placeholder="무게(g)" class="w-1/3 text-xs border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-brand-500"><select id="f-${g.id}" class="w-1/3 text-[11px] border border-slate-300 rounded-lg px-1 py-1.5 bg-white"><option value="">피딩 안함</option><option value="사료" ${l.feed==='사료'?'selected':''}>사료</option><option value="충식" ${l.feed==='충식'?'selected':''}>충식</option><option value="둘다" ${l.feed==='둘다'?'selected':''}>둘다</option></select><select id="c-${g.id}" class="w-1/3 text-[11px] border border-slate-300 rounded-lg px-1 py-1.5 bg-white"><option value="">청소 안함</option><option value="물그릇" ${l.clean==='물그릇'?'selected':''}>물그릇</option><option value="간단청소" ${l.clean==='간단청소'?'selected':''}>간단청소</option><option value="대청소" ${l.clean==='대청소'?'selected':''}>대청소</option></select></div></div>`;});
     document.getElementById('log-entry-list').innerHTML=h;
 };
-window.saveDailyLogs = function(){const date=normalizeDateStr(document.getElementById('log-date').value);if(!date||date.length<8)return alert('날짜를 올바르게 입력해주세요.');window.appData.geckos.forEach(g=>{const w=document.getElementById(`w-${g.id}`).value,f=document.getElementById(`f-${g.id}`).value,c=document.getElementById(`c-${g.id}`).value;window.appData.logs=window.appData.logs.filter(l=>!(l.geckoId==g.id&&l.date===date));if(w||f||c) window.appData.logs.push({date,geckoId:g.id,weight:w?parseFloat(w):'',feed:f,clean:c});});saveData();window.showToast("기록 저장 완료");};
 
-// 타임라인 오류 수정 (치명적인 렌더링 에러 복구 완료)
-window.renderHistoryTimeline = function(){
-    const fi=document.getElementById('filter-gecko').value;
-    const sortM=document.getElementById('timeline-sort').value;
-    let logs=[...window.appData.logs];
-    if(fi!=='all') logs=logs.filter(l=>l.geckoId==fi);
-    
-    let processed = logs.map(l => {
-        const g = window.appData.geckos.find(x=>x.id==l.geckoId) || {name:'삭제됨', gender:'미구분'};
-        return {...l, geckoName: g.name, gender: g.gender};
+window.saveDailyLogs = function(){
+    const date=normalizeDateStr(document.getElementById('log-date').value);if(!date||date.length<8)return alert('날짜를 올바르게 입력해주세요.');
+    window.appData.geckos.forEach(g=>{
+        const w=document.getElementById(`w-${g.id}`).value,f=document.getElementById(`f-${g.id}`).value,c=document.getElementById(`c-${g.id}`).value;
+        window.appData.logs=window.appData.logs.filter(l=>!(l.geckoId==g.id&&l.date===date));
+        if(w||f||c) window.appData.logs.push({date,geckoId:g.id,weight:w?parseFloat(w):'',feed:f,clean:c});
     });
-    
+    saveData();window.showToast("기록 저장 완료");
+};
+
+window.renderHistoryTimeline = function(){
+    const fi=document.getElementById('filter-gecko').value; const sortM=document.getElementById('timeline-sort').value;
+    let logs=[...window.appData.logs]; if(fi!=='all') logs=logs.filter(l=>l.geckoId==fi);
+    let processed = logs.map(l => { const g = window.appData.geckos.find(x=>x.id==l.geckoId) || {name:'삭제됨', gender:'미구분'}; return {...l, geckoName: g.name, gender: g.gender}; });
     processed.sort((a,b) => {
         if(sortM === 'date-desc') return getSafeDate(b.date)-getSafeDate(a.date);
         if(sortM === 'date-asc') return getSafeDate(a.date)-getSafeDate(b.date);
-        if(sortM === 'name-asc') {
-            const comp = a.geckoName.localeCompare(b.geckoName);
-            return comp !== 0 ? comp : getSafeDate(b.date)-getSafeDate(a.date);
-        }
-        if(sortM === 'male-first') {
-            const go={'수':0,'암':1,'미구분':2};
-            const diff = go[a.gender] - go[b.gender];
-            return diff !== 0 ? diff : getSafeDate(b.date)-getSafeDate(a.date);
-        }
-        if(sortM === 'female-first') {
-            const go={'암':0,'수':1,'미구분':2};
-            const diff = go[a.gender] - go[b.gender];
-            return diff !== 0 ? diff : getSafeDate(b.date)-getSafeDate(a.date);
-        }
+        if(sortM === 'name-asc') { const comp = a.geckoName.localeCompare(b.geckoName); return comp !== 0 ? comp : getSafeDate(b.date)-getSafeDate(a.date); }
+        if(sortM === 'male-first') { const diff = {'수':0,'암':1,'미구분':2}[a.gender] - {'수':0,'암':1,'미구분':2}[b.gender]; return diff !== 0 ? diff : getSafeDate(b.date)-getSafeDate(a.date); }
+        if(sortM === 'female-first') { const diff = {'암':0,'수':1,'미구분':2}[a.gender] - {'암':0,'수':1,'미구분':2}[b.gender]; return diff !== 0 ? diff : getSafeDate(b.date)-getSafeDate(a.date); }
     });
-
     let h='';
     processed.forEach(l=>{
-        const w = l.weight ? l.weight + 'g' : '-';
-        const f = l.feed || '-';
-        const c = l.clean || '-';
-        const gc = l.gender === '수' ? 'text-blue-500' : (l.gender === '암' ? 'text-pink-500' : 'text-slate-400');
-        const gi = l.gender === '수' ? '♂' : (l.gender === '암' ? '♀' : '?');
-
-        h += `<tr class="hover:bg-slate-50/80">
-            <td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(l.date)}</td>
-            <td class="px-3 py-3 font-semibold text-slate-800"><span class="${gc} font-bold mr-1">${gi}</span>${l.geckoName}</td>
-            <td class="px-2 py-3 text-center font-bold text-brand-600 whitespace-nowrap">${w}</td>
-            <td class="px-2 py-3 text-center text-[11px]">${f}</td>
-            <td class="px-2 py-3 text-center text-[11px]">${c}</td>
-            <td class="px-2 py-3 text-center">
-                <button onclick="window.deleteLog('${l.date}', ${l.geckoId})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
-            </td>
-        </tr>`;
+        const w = l.weight ? l.weight + 'g' : '-'; const f = l.feed || '-'; const c = l.clean || '-';
+        const gc = l.gender === '수' ? 'text-blue-500' : (l.gender === '암' ? 'text-pink-500' : 'text-slate-400'); const gi = l.gender === '수' ? '♂' : (l.gender === '암' ? '♀' : '?');
+        h += `<tr class="hover:bg-slate-50/80"><td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(l.date)}</td><td class="px-3 py-3 font-semibold text-slate-800"><span class="${gc} font-bold mr-1">${gi}</span>${l.geckoName}</td><td class="px-2 py-3 text-center font-bold text-brand-600 whitespace-nowrap">${w}</td><td class="px-2 py-3 text-center text-[11px]">${f}</td><td class="px-2 py-3 text-center text-[11px]">${c}</td><td class="px-2 py-3 text-center"><button onclick="window.deleteLog('${l.date}', ${l.geckoId})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
     });
     document.getElementById('history-timeline-body').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
 };
 window.deleteLog = function(d,id){window.appData.logs=window.appData.logs.filter(l=>!(l.date===d&&l.geckoId==id));saveData();window.renderHistoryTimeline();};
 
-// ===== 산란/부화 =====
 window.setBreedType = function(type){
     document.getElementById('breed-type').value=type;
     if(type==='fertile'){document.getElementById('btn-fertile').className='flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-brand-600 text-white transition';document.getElementById('btn-infertile').className='flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-500 transition';document.getElementById('fertile-fields').classList.remove('hidden');document.getElementById('infertile-fields').classList.add('hidden');document.getElementById('temp-field').classList.remove('hidden');document.getElementById('lay-date-label').innerText='산란일 (선택)';document.getElementById('breed-form-title').innerHTML='<i class="fa-solid fa-heart text-pink-500"></i> 교배/산란 등록';}
@@ -604,25 +399,14 @@ window.deleteEgg = function(id){if(confirm('삭제하시겠습니까?')){window.
 window.deleteInfertileEgg = function(id){if(confirm('삭제하시겠습니까?')){window.appData.infertileEggs=window.appData.infertileEggs.filter(e=>e.id!=id);saveData();}};
 
 window.renderBreedingTable = function(){
-    const filter=document.getElementById('eggFilter').value; 
-    const sortM=document.getElementById('eggSort').value;
-    let eggs=[...window.appData.eggs];
-    const today=new Date(); today.setHours(0,0,0,0);
+    const filter=document.getElementById('eggFilter').value; const sortM=document.getElementById('eggSort').value;
+    let eggs=[...window.appData.eggs]; const today=new Date(); today.setHours(0,0,0,0);
 
-    // 차수(Clutch) 동적 계산 및 할당
     const femaleGroups = {};
-    eggs.forEach(e => {
-        if (!femaleGroups[e.female]) femaleGroups[e.female] = [];
-        femaleGroups[e.female].push(e);
-    });
-    
+    eggs.forEach(e => { if (!femaleGroups[e.female]) femaleGroups[e.female] = []; femaleGroups[e.female].push(e); });
     Object.keys(femaleGroups).forEach(female => {
         femaleGroups[female].sort((a,b) => getSafeDate(a.layDate||a.mateDate) - getSafeDate(b.layDate||b.mateDate));
-        let clutchCount = 1;
-        femaleGroups[female].forEach(e => {
-            if(e.layDate) e.clutch = clutchCount++;
-            else e.clutch = '?';
-        });
+        let clutchCount = 1; femaleGroups[female].forEach(e => { if(e.layDate) e.clutch = clutchCount++; else e.clutch = '?'; });
     });
 
     let processed = eggs.map(egg => {
@@ -630,31 +414,20 @@ window.renderBreedingTable = function(){
         if(egg.layDate){
             const l=getSafeDate(egg.layDate);
             if(l){
-                const days=Math.round(72-(parseFloat(egg.targetTemp)-24)*10);
-                const hd=new Date(l); hd.setDate(hd.getDate()+days);
-                const dn=['일','월','화','수','목','금','토'];
-                exp=`${hd.getFullYear()}-${String(hd.getMonth()+1).padStart(2,'0')}-${String(hd.getDate()).padStart(2,'0')} (${dn[hd.getDay()]})`;
-                diff=Math.round((hd-today)/864e5);
-                state=diff<0?'hatched':'incubating';
-                dDay=diff<0?'해칭완료':(diff===0?'★D-Day':`D-${diff}`);
+                const days=Math.round(72-(parseFloat(egg.targetTemp)-24)*10); const hd=new Date(l); hd.setDate(hd.getDate()+days);
+                const dn=['일','월','화','수','목','금','토']; exp=`${hd.getFullYear()}-${String(hd.getMonth()+1).padStart(2,'0')}-${String(hd.getDate()).padStart(2,'0')} (${dn[hd.getDay()]})`;
+                diff=Math.round((hd-today)/864e5); state=diff<0?'hatched':'incubating'; dDay=diff<0?'해칭완료':(diff===0?'★D-Day':`D-${diff}`);
             }
         }
         return {...egg, state, dDay, exp, diff};
     });
 
     if(filter !== 'all') processed = processed.filter(e => e.state === filter);
-
     processed.sort((a,b) => {
         if(sortM === 'layDateDesc') return getSafeDate(b.layDate||b.mateDate) - getSafeDate(a.layDate||a.mateDate);
         if(sortM === 'created') return b.id - a.id;
-        if(sortM === 'maleSort') {
-            const comp = (a.male||'').localeCompare(b.male||'');
-            return comp !== 0 ? comp : getSafeDate(b.layDate||b.mateDate) - getSafeDate(a.layDate||a.mateDate);
-        }
-        if(sortM === 'femaleSort') {
-            const comp = (a.female||'').localeCompare(b.female||'');
-            return comp !== 0 ? comp : getSafeDate(b.layDate||b.mateDate) - getSafeDate(a.layDate||a.mateDate);
-        }
+        if(sortM === 'maleSort') { const comp = (a.male||'').localeCompare(b.male||''); return comp !== 0 ? comp : getSafeDate(b.layDate||b.mateDate) - getSafeDate(a.layDate||a.mateDate); }
+        if(sortM === 'femaleSort') { const comp = (a.female||'').localeCompare(b.female||''); return comp !== 0 ? comp : getSafeDate(b.layDate||b.mateDate) - getSafeDate(a.layDate||a.mateDate); }
         if(sortM === 'mateDate') return getSafeDate(b.mateDate) - getSafeDate(a.mateDate);
         if(sortM === 'dday') return a.diff - b.diff;
         return 0;
@@ -664,115 +437,51 @@ window.renderBreedingTable = function(){
     processed.forEach(egg=>{
         const sc=egg.state==='hatched'?'bg-slate-100 text-slate-400':(egg.state==='waiting'?'bg-amber-50 text-amber-600':'bg-brand-50 text-brand-600 border-brand-200 border');
         const pulse = (egg.diff >= 0 && egg.diff <= 7) ? 'animate-pulse text-red-600 border-red-200 bg-red-50' : sc;
-        
-        h += `<tr class="hover:bg-slate-50/80">
-            <td class="px-3 py-3 font-semibold">
-                <div class="text-[11px] flex items-center flex-wrap">
-                    <span class="text-blue-500">♂</span>${egg.male} 
-                    <span class="text-slate-300 px-1">×</span> 
-                    <span class="text-pink-500">♀</span>${egg.female} 
-                    ${getClutchBadge(egg.clutch)}
-                </div>
-                ${egg.memo?'<div class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[120px]">'+egg.memo+'</div>':''}
-            </td>
-            <td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(egg.mateDate)}</td>
-            <td class="px-2 py-3 text-center font-bold font-mono whitespace-nowrap ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</td>
-            <td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td>
-            <td class="px-3 py-3 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">${egg.exp}</td>
-            <td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td>
-            <td class="px-2 py-3 text-center space-x-2">
-                <button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button>
-                <button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
-            </td>
-        </tr>`;
+        h += `<tr class="hover:bg-slate-50/80"><td class="px-3 py-3 font-semibold"><div class="text-[11px] flex items-center flex-wrap"><span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300 px-1">×</span> <span class="text-pink-500">♀</span>${egg.female} ${getClutchBadge(egg.clutch)}</div>${egg.memo?'<div class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[120px]">'+egg.memo+'</div>':''}</td><td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(egg.mateDate)}</td><td class="px-2 py-3 text-center font-bold font-mono whitespace-nowrap ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</td><td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td><td class="px-3 py-3 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">${egg.exp}</td><td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td><td class="px-2 py-3 text-center space-x-2"><button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
     });
     document.getElementById('eggTableBody').innerHTML=h||`<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
 };
 
 window.renderInfertileTable = function() {
-    let eggs=[...window.appData.infertileEggs];
-    const sortM=document.getElementById('infSort').value;
-    
+    let eggs=[...window.appData.infertileEggs]; const sortM=document.getElementById('infSort').value;
     eggs.sort((a,b) => {
         if(sortM === 'layDateDesc') return getSafeDate(b.layDate) - getSafeDate(a.layDate);
         if(sortM === 'created') return b.id - a.id;
         if(sortM === 'femaleSort') return (a.female||'').localeCompare(b.female||'');
         return 0;
     });
-
     let h='';
     eggs.forEach(egg => {
         const past = window.appData.infertileEggs.filter(e => e.female===egg.female && getSafeDate(e.layDate)<getSafeDate(egg.layDate)).sort((a,b)=>getSafeDate(b.layDate)-getSafeDate(a.layDate));
-        let gap = '-';
-        if(past.length > 0) {
-            const d = daysBetween(past[0].layDate, egg.layDate);
-            if(d !== null) gap = `${d}일`;
-        }
-
-        h += `<tr class="hover:bg-slate-50/80">
-            <td class="px-3 py-3 font-semibold text-slate-800 text-[11px]"><span class="text-pink-500 mr-1">♀</span>${egg.female}</td>
-            <td class="px-2 py-3 text-center text-slate-700 font-bold font-mono whitespace-nowrap">${formatDisplayDate(egg.layDate)}</td>
-            <td class="px-2 py-3 text-center"><span class="font-bold text-slate-700">${egg.eggCount}</span>알</td>
-            <td class="px-2 py-3 text-center text-xs text-slate-500">${gap}</td>
-            <td class="px-2 py-3 text-center text-[10px] text-slate-400 truncate max-w-[100px]">${egg.memo||'-'}</td>
-            <td class="px-2 py-3 text-center space-x-2">
-                <button onclick="window.editInfertileEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button>
-                <button onclick="window.deleteInfertileEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
-            </td>
-        </tr>`;
+        let gap = '-'; if(past.length > 0) { const d = daysBetween(past[0].layDate, egg.layDate); if(d !== null) gap = `${d}일`; }
+        h += `<tr class="hover:bg-slate-50/80"><td class="px-3 py-3 font-semibold text-slate-800 text-[11px]"><span class="text-pink-500 mr-1">♀</span>${egg.female}</td><td class="px-2 py-3 text-center text-slate-700 font-bold font-mono whitespace-nowrap">${formatDisplayDate(egg.layDate)}</td><td class="px-2 py-3 text-center"><span class="font-bold text-slate-700">${egg.eggCount}</span>알</td><td class="px-2 py-3 text-center text-xs text-slate-500">${gap}</td><td class="px-2 py-3 text-center text-[10px] text-slate-400 truncate max-w-[100px]">${egg.memo||'-'}</td><td class="px-2 py-3 text-center space-x-2"><button onclick="window.editInfertileEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteInfertileEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
     });
     document.getElementById('infertileTableBody').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
 };
 
-// ===== 혈통 트리 =====
 window.populateLineageDropdowns = function(){
-    let allH='<option value="">개체 선택</option>', mH='<option value="">미상</option>', fH='<option value="">미상</option>';
-    let imH='<option value="">수컷 선택</option>', ifH='<option value="">암컷 선택</option>';
-    let vH='<option value="">개체 선택</option>';
+    let allH='<option value="">개체 선택</option>', mH='<option value="">미상</option>', fH='<option value="">미상</option>', imH='<option value="">수컷 선택</option>', ifH='<option value="">암컷 선택</option>', vH='<option value="">개체 선택</option>';
     window.appData.geckos.forEach(g=>{
-        allH+=`<option value="${g.id}">${g.name} (${g.gender})</option>`;
-        vH+=`<option value="${g.id}">${g.name}</option>`;
+        allH+=`<option value="${g.id}">${g.name} (${g.gender})</option>`; vH+=`<option value="${g.id}">${g.name}</option>`;
         if(g.gender==='수'){mH+=`<option value="${g.id}">${g.name}</option>`;imH+=`<option value="${g.id}">${g.name}</option>`;}
         if(g.gender==='암'){fH+=`<option value="${g.id}">${g.name}</option>`;ifH+=`<option value="${g.id}">${g.name}</option>`;}
     });
-    document.getElementById('lineage-child').innerHTML=allH;
-    document.getElementById('lineage-father').innerHTML=mH;
-    document.getElementById('lineage-mother').innerHTML=fH;
-    document.getElementById('inbreed-male').innerHTML=imH;
-    document.getElementById('inbreed-female').innerHTML=ifH;
-    document.getElementById('lineage-view-target').innerHTML=vH;
+    document.getElementById('lineage-child').innerHTML=allH; document.getElementById('lineage-father').innerHTML=mH; document.getElementById('lineage-mother').innerHTML=fH; document.getElementById('inbreed-male').innerHTML=imH; document.getElementById('inbreed-female').innerHTML=ifH; document.getElementById('lineage-view-target').innerHTML=vH;
 };
 
 window.saveLineage = function(){
-    const childId=parseInt(document.getElementById('lineage-child').value);
-    const fatherId=document.getElementById('lineage-father').value?parseInt(document.getElementById('lineage-father').value):null;
-    const motherId=document.getElementById('lineage-mother').value?parseInt(document.getElementById('lineage-mother').value):null;
-    if(!childId) return alert('자녀 개체를 선택하세요.');
-    
-    if(childId===fatherId||childId===motherId) return alert('자기 자신을 부모로 설정할 수 없습니다.');
-    window.appData.lineage=window.appData.lineage.filter(l=>l.childId!==childId);
-    window.appData.lineage.push({childId,fatherId,motherId});
-    saveData(); window.showToast("혈통 관계 저장 완료");
+    const childId=parseInt(document.getElementById('lineage-child').value), fatherId=document.getElementById('lineage-father').value?parseInt(document.getElementById('lineage-father').value):null, motherId=document.getElementById('lineage-mother').value?parseInt(document.getElementById('lineage-mother').value):null;
+    if(!childId) return alert('자녀 개체를 선택하세요.'); if(childId===fatherId||childId===motherId) return alert('자기 자신을 부모로 설정할 수 없습니다.');
+    window.appData.lineage=window.appData.lineage.filter(l=>l.childId!==childId); window.appData.lineage.push({childId,fatherId,motherId}); saveData(); window.showToast("혈통 관계 저장 완료");
 };
 
-window.selectLineageViewTarget = function(id) {
-    document.getElementById('lineage-view-target').value = id;
-    document.getElementById('lineage-view-target').scrollIntoView({behavior: 'smooth', block: 'center'});
-    window.renderLineageTree();
-};
+window.selectLineageViewTarget = function(id) { document.getElementById('lineage-view-target').value = id; document.getElementById('lineage-view-target').scrollIntoView({behavior: 'smooth', block: 'center'}); window.renderLineageTree(); };
 
 window.renderLineageList = function(){
     let h='';
     window.appData.lineage.forEach(l=>{
-        const child=window.appData.geckos.find(g=>g.id==l.childId);
-        const father=l.fatherId?window.appData.geckos.find(g=>g.id==l.fatherId):null;
-        const mother=l.motherId?window.appData.geckos.find(g=>g.id==l.motherId):null;
-        h+=`<tr class="hover:bg-slate-50">
-            <td class="py-2.5 px-2 font-bold text-brand-600 cursor-pointer hover:underline" onclick="window.selectLineageViewTarget(${l.childId})">${child?child.name:'?'}</td>
-            <td class="py-2.5 px-2 text-blue-600">${father?'♂ '+father.name:'미상'}</td>
-            <td class="py-2.5 px-2 text-pink-600">${mother?'♀ '+mother.name:'미상'}</td>
-            <td class="py-2.5 px-2"><button onclick="window.deleteLineage(${l.childId})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button></td>
-        </tr>`;
+        const child=window.appData.geckos.find(g=>g.id==l.childId), father=l.fatherId?window.appData.geckos.find(g=>g.id==l.fatherId):null, mother=l.motherId?window.appData.geckos.find(g=>g.id==l.motherId):null;
+        h+=`<tr class="hover:bg-slate-50"><td class="py-2.5 px-2 font-bold text-brand-600 cursor-pointer hover:underline" onclick="window.selectLineageViewTarget(${l.childId})">${child?child.name:'?'}</td><td class="py-2.5 px-2 text-blue-600">${father?'♂ '+father.name:'미상'}</td><td class="py-2.5 px-2 text-pink-600">${mother?'♀ '+mother.name:'미상'}</td><td class="py-2.5 px-2"><button onclick="window.deleteLineage(${l.childId})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
     });
     document.getElementById('lineage-list-body').innerHTML=h||`<tr><td colspan="4" class="text-center py-6 text-slate-400 text-xs">등록된 혈통 관계가 없습니다.</td></tr>`;
 };
@@ -780,191 +489,71 @@ window.renderLineageList = function(){
 window.deleteLineage = function(childId){window.appData.lineage=window.appData.lineage.filter(l=>l.childId!=childId);saveData();};
 
 window.renderLineageTree = function(){
-    const targetId=parseInt(document.getElementById('lineage-view-target').value);
-    const container=document.getElementById('lineage-tree-container');
+    const targetId=parseInt(document.getElementById('lineage-view-target').value), container=document.getElementById('lineage-tree-container');
     if(!targetId){container.innerHTML='<p class="text-slate-400 text-sm">개체를 선택하면 혈통도가 표시됩니다.</p>';return;}
-    const target=window.appData.geckos.find(g=>g.id==targetId);
-    if(!target){container.innerHTML='<p class="text-slate-400 text-sm">개체를 찾을 수 없습니다.</p>';return;}
+    const target=window.appData.geckos.find(g=>g.id==targetId); if(!target){container.innerHTML='<p class="text-slate-400 text-sm">개체를 찾을 수 없습니다.</p>';return;}
 
     function getAncestors(id, depth) {
-        if(depth>4) return null;
-        const g=window.appData.geckos.find(x=>x.id==id);
-        if(!g) return null;
-        const lin=window.appData.lineage.find(l=>l.childId==id);
-        return {
-            id: g.id, name: g.name, gender: g.gender, morph: g.morph,
-            father: lin&&lin.fatherId ? getAncestors(lin.fatherId, depth+1) : null,
-            mother: lin&&lin.motherId ? getAncestors(lin.motherId, depth+1) : null
-        };
+        if(depth>4) return null; const g=window.appData.geckos.find(x=>x.id==id); if(!g) return null; const lin=window.appData.lineage.find(l=>l.childId==id);
+        return { id: g.id, name: g.name, gender: g.gender, morph: g.morph, father: lin&&lin.fatherId ? getAncestors(lin.fatherId, depth+1) : null, mother: lin&&lin.motherId ? getAncestors(lin.motherId, depth+1) : null };
     }
 
-    const tree = getAncestors(targetId, 0);
-    const children = window.appData.lineage.filter(l=>l.fatherId==targetId||l.motherId==targetId).map(l=>window.appData.geckos.find(g=>g.id==l.childId)).filter(Boolean);
+    const tree = getAncestors(targetId, 0), children = window.appData.lineage.filter(l=>l.fatherId==targetId||l.motherId==targetId).map(l=>window.appData.geckos.find(g=>g.id==l.childId)).filter(Boolean);
 
     function renderNode(node, level) {
         if(!node) return `<div class="inline-flex items-center px-3 py-2 bg-slate-100 rounded-lg text-[10px] text-slate-400 border border-dashed border-slate-300">미상</div>`;
-        const gc = node.gender==='수'?'border-blue-300 bg-blue-50':(node.gender==='암'?'border-pink-300 bg-pink-50':'border-slate-300 bg-slate-50');
-        const gi = node.gender==='수'?'♂':(node.gender==='암'?'♀':'?');
-        const textSize = level===0?'text-sm font-bold':'text-[11px] font-semibold';
+        const gc = node.gender==='수'?'border-blue-300 bg-blue-50':(node.gender==='암'?'border-pink-300 bg-pink-50':'border-slate-300 bg-slate-50'), gi = node.gender==='수'?'♂':(node.gender==='암'?'♀':'?'), textSize = level===0?'text-sm font-bold':'text-[11px] font-semibold';
         return `<div class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 ${gc} ${textSize} shadow-sm cursor-pointer hover:scale-105 transition" onclick="window.selectLineageViewTarget(${node.id})"><span>${gi}</span><span>${node.name}</span>${node.morph?`<span class="text-[9px] text-slate-400 font-normal">${node.morph}</span>`:''}</div>`;
     }
 
     let html = `<div class="flex flex-col items-center gap-2 py-4 min-w-[400px]">`;
     if(tree.father || tree.mother) {
-        const gp_ff = tree.father?tree.father.father:null; const gp_fm = tree.father?tree.father.mother:null; const gp_mf = tree.mother?tree.mother.father:null; const gp_mm = tree.mother?tree.mother.mother:null;
-        if(gp_ff||gp_fm||gp_mf||gp_mm) {
-            html += `<div class="flex gap-4 justify-center flex-wrap"><div class="flex gap-2">${renderNode(gp_ff,2)}${renderNode(gp_fm,2)}</div><div class="flex gap-2">${renderNode(gp_mf,2)}${renderNode(gp_mm,2)}</div></div>`;
-            html += `<div class="flex gap-0"><div class="w-px h-4 bg-slate-300 mx-auto"></div></div><div class="text-[9px] text-slate-400 font-bold">조부모</div><div class="w-px h-3 bg-slate-300"></div>`;
-        }
+        const gp_ff = tree.father?tree.father.father:null, gp_fm = tree.father?tree.father.mother:null, gp_mf = tree.mother?tree.mother.father:null, gp_mm = tree.mother?tree.mother.mother:null;
+        if(gp_ff||gp_fm||gp_mf||gp_mm) { html += `<div class="flex gap-4 justify-center flex-wrap"><div class="flex gap-2">${renderNode(gp_ff,2)}${renderNode(gp_fm,2)}</div><div class="flex gap-2">${renderNode(gp_mf,2)}${renderNode(gp_mm,2)}</div></div><div class="flex gap-0"><div class="w-px h-4 bg-slate-300 mx-auto"></div></div><div class="text-[9px] text-slate-400 font-bold">조부모</div><div class="w-px h-3 bg-slate-300"></div>`; }
         html += `<div class="flex gap-6 justify-center">${renderNode(tree.father,1)}${renderNode(tree.mother,1)}</div><div class="flex flex-col items-center"><div class="w-px h-3 bg-slate-300"></div><div class="text-[9px] text-slate-400 font-bold">부모</div><div class="w-px h-3 bg-slate-300"></div></div>`;
     }
     html += `<div class="relative">${renderNode(tree,0)}<div class="absolute -top-1 -right-1 w-4 h-4 bg-brand-500 rounded-full flex items-center justify-center text-white text-[8px]">★</div></div>`;
-    if(children.length) {
-        html += `<div class="flex flex-col items-center"><div class="w-px h-3 bg-slate-300"></div><div class="text-[9px] text-slate-400 font-bold">자녀</div><div class="w-px h-3 bg-slate-300"></div></div>`;
-        html += `<div class="flex gap-3 flex-wrap justify-center">${children.map(c=>renderNode({id:c.id,name:c.name,gender:c.gender,morph:c.morph},1)).join('')}</div>`;
-    }
-    html += `</div>`;
-    container.innerHTML = html;
+    if(children.length) { html += `<div class="flex flex-col items-center"><div class="w-px h-3 bg-slate-300"></div><div class="text-[9px] text-slate-400 font-bold">자녀</div><div class="w-px h-3 bg-slate-300"></div></div><div class="flex gap-3 flex-wrap justify-center">${children.map(c=>renderNode({id:c.id,name:c.name,gender:c.gender,morph:c.morph},1)).join('')}</div>`; }
+    html += `</div>`; container.innerHTML = html;
 };
 
 window.checkInbreeding = function(){
-    const maleId=parseInt(document.getElementById('inbreed-male').value);
-    const femaleId=parseInt(document.getElementById('inbreed-female').value);
-    const resEl=document.getElementById('inbreed-result');
+    const maleId=parseInt(document.getElementById('inbreed-male').value), femaleId=parseInt(document.getElementById('inbreed-female').value), resEl=document.getElementById('inbreed-result');
     if(!maleId||!femaleId){resEl.innerHTML='<span class="text-slate-400">수컷과 암컷을 모두 선택하세요.</span>';resEl.classList.remove('hidden');return;}
-
     function getAncestorIds(id, depth, visited) {
         if(depth>5||visited.has(id)) return new Set();
         visited.add(id); const ids = new Set([id]); const lin = window.appData.lineage.find(l=>l.childId==id);
         if(lin) { if(lin.fatherId) getAncestorIds(lin.fatherId, depth+1, visited).forEach(x=>ids.add(x)); if(lin.motherId) getAncestorIds(lin.motherId, depth+1, visited).forEach(x=>ids.add(x)); }
         return ids;
     }
-
-    const maleAnc = getAncestorIds(maleId, 0, new Set()); const femaleAnc = getAncestorIds(femaleId, 0, new Set());
+    const maleAnc = getAncestorIds(maleId, 0, new Set()), femaleAnc = getAncestorIds(femaleId, 0, new Set());
     const common = [...maleAnc].filter(id=>femaleAnc.has(id)&&id!==maleId&&id!==femaleId);
-
-    if(common.length > 0) {
-        const names = common.map(id=>{const g=window.appData.geckos.find(x=>x.id==id);return g?g.name:'?';}).join(', ');
-        resEl.innerHTML=`<div class="p-3 bg-red-50 border border-red-200 rounded-lg"><i class="fa-solid fa-triangle-exclamation text-red-500 mr-1"></i><span class="font-bold text-red-700">근친교배 위험!</span><br><span class="text-red-600">공통 조상: ${names}</span><br><span class="text-[10px] text-red-500">이 조합의 교배는 권장하지 않습니다.</span></div>`;
-    } else { resEl.innerHTML=`<div class="p-3 bg-green-50 border border-green-200 rounded-lg"><i class="fa-solid fa-circle-check text-green-500 mr-1"></i><span class="font-bold text-green-700">안전</span><br><span class="text-green-600">5세대 내 공통 조상이 없습니다.</span></div>`; }
+    if(common.length > 0) { const names = common.map(id=>{const g=window.appData.geckos.find(x=>x.id==id);return g?g.name:'?';}).join(', '); resEl.innerHTML=`<div class="p-3 bg-red-50 border border-red-200 rounded-lg"><i class="fa-solid fa-triangle-exclamation text-red-500 mr-1"></i><span class="font-bold text-red-700">근친교배 위험!</span><br><span class="text-red-600">공통 조상: ${names}</span><br><span class="text-[10px] text-red-500">이 조합의 교배는 권장하지 않습니다.</span></div>`; } 
+    else { resEl.innerHTML=`<div class="p-3 bg-green-50 border border-green-200 rounded-lg"><i class="fa-solid fa-circle-check text-green-500 mr-1"></i><span class="font-bold text-green-700">안전</span><br><span class="text-green-600">5세대 내 공통 조상이 없습니다.</span></div>`; }
     resEl.classList.remove('hidden');
 };
 
-// ===== 착한크레 모프 계산기 =====
-const morphCombinations = {
-    "normal-normal": "노멀 100%",
-    "normal-axanthic": "헷 아잔틱 100%",
-    "normal-choco": "헷 초초 100%",
-    "normal-sable": "세이블 50%\n노멀 50%",
-    "normal-hetaxanthic": "헷 아잔틱 50%\n노멀 50%",
-    "normal-hetchoco": "헷 초초 50%\n노멀 50%",
-    "normal-lilysable": "릴리 화이트 50%\n세이블 50%",
-    "normal-supersable": "세이블 100%",
-    "normal-supercappuccino": "카푸치노 100%",
-    "normal-frappuccino": "릴리 화이트 50%\n카푸치노 50%",
-    "hetaxanthic-hetaxanthic": "헷 아잔틱 50%\n아잔틱 25%\n노멀 25%",
-    "axanthic-axanthic": "아잔틱 100%",
-    "axanthic-sable": "세이블 헷 아잔틱 50%\n헷 아잔틱 50%",
-    "lilywhite-axanthic": "릴리 헷 아잔틱 50%\n헷 아잔틱 50%",
-    "axanthic-choco": "헷 아잔틱 헷 초초 100%",
-    "axanthic-supersable": "세이블 헷 아잔틱 100%",
-    "axanthic-lilysable": "릴리 헷 아잔틱 50%\n세이블 헷 아잔틱 50%",
-    "axanthic-frappuccino": "릴리 헷 아잔틱 50%\n카푸치노 헷 아잔틱 50%",
-    "axanthic-hetchoco": "헷 아잔틱 헷 초초 50%\n헷 아잔틱 50%",
-    "choco-choco": "초초 100%",
-    "cappuccino-hetaxanthic": "카푸치노 헷 아잔틱 25%\n헷 아잔틱 25%\n카푸치노 25%\n노멀 25%",
-    "cappuccino-hetchoco": "카푸치노 헷 초초 25%\n헷 초초 25%\n카푸치노 25%\n노멀 25%",
-    "lilywhite-normal": "릴리 화이트 50%\n노멀 50%",
-    "lilywhite-hetaxanthic": "릴리 헷 아잔틱 25%\n헷 아잔틱 25%\n릴리 화이트 25%\n노멀 25%",
-    "lilywhite-hetchoco": "릴리 헷 초초 25%\n헷 초초 25%\n릴리 화이트 25%\n노멀 25%",
-    "lilywhite-frappuccino": "프라푸치노 25%\n릴리 화이트 25%\n슈퍼 릴리 화이트 카푸치노 (치사유전) 12.5%\n슈퍼 릴리 화이트 (치사유전) 12.5%\n카푸치노 12.5%\n노멀 12.5%",
-    "lilywhite-lilysable": "슈퍼 릴리 화이트 (치사유전) 25%\n릴리 세이블 25%\n릴리 화이트 25%\n세이블 25%",
-    "lilywhite-supercappuccino": "프라푸치노 50%\n카푸치노 50%",
-    "lilywhite-supersable": "릴리 세이블 50%\n세이블 50%",
-    "lilywhite-choco": "릴리 화이트 헷 초초 50%\n헷 초초 50%",
-    "lilywhite-lilywhite": "릴리 화이트 50%\n슈퍼 릴리 화이트 (치사유전) 25%\n노멀 25%",
-    "lilywhite-cappuccino": "릴리 화이트 25%\n카푸치노 25%\n프라푸치노 25%\n노멀 25%",
-    "lilywhite-sable": "릴리 세이블 25%\n세이블 25%\n릴리 화이트 25%\n노멀 25%",
-    "cappuccino-cappuccino": "슈퍼 카푸치노 100%",
-    "cappuccino-axanthic": "카푸치노 헷 아잔틱 50%\n헷 아잔틱 50%",
-    "cappuccino-normal": "카푸치노 50%\n노멀 50%",
-    "cappuccino-sable": "루왁 25%\n카푸치노 25%\n세이블 25%\n노멀 25%",
-    "cappuccino-frappuccino": "프라푸치노 25%\n카푸치노 25%\n설악 12.5%\n슈퍼 카푸치노 12.5%\n릴리 화이트 12.5%\n노멀 12.5%",
-    "supercappuccino-cappuccino": "슈퍼 카푸치노 50%\n카푸치노 50%",
-    "hetaxanthic-hetchoco": "헷 아잔틱 헷 초초 25%\n헷 아잔틱 25%\n헷 초초 25%\n노멀 25%",
-    "frappuccino-lilysable": "슈퍼 릴리 화이트 (치사유전) 25%\n프라푸치노 25%\n릴리 세이블 25%\n루왁 25%",
-    "frappuccino-sable": "릴리 화이트 25%\n카푸치노 25%\n릴리 세이블 25%\n루왁 25%",
-    "frappuccino-frappuccino": "프라푸치노 50%\n릴리 화이트 12.5%\n카푸치노 12.5%\n슈퍼 릴리 화이트 (치사유전) 6.25%\n슈퍼 카푸치노 6.25%\n슈퍼 릴리 화이트 슈퍼 카푸치노 (치사유전) 6.25%\n노멀 6.25%",
-    "liljantik-hetaxanthic": "아잔틱 25%\n릴잔틱 25%\n릴리 헷 아잔틱 25%\n헷 아잔틱 25%",
-    "liljantik-axanthic": "아잔틱 50%\n릴잔틱 50%",
-    "liljantik-normal": "릴리 헷 아잔틱 50%\n헷 아잔틱 50%",
-    "choco-hetchoco": "초초 50%\n헷 초초 50%",
-    "choco-cappuccino": "카푸치노 헷 초초 50%\n헷 초초 50%",
-    "choco-frappuccino": "릴리 헷 초초 50%\n카푸치노 헷 초초 50%",
-    "hetaxanthic-sable": "세이블 헷 아잔틱 25%\n헷 아잔틱 25%\n세이블 25%\n노멀 25%",
-    "hetaxanthic-frappuccino": "릴리 헷 아잔틱 25%\n카푸치노 헷 아잔틱 25%\n릴리 화이트 25%\n카푸치노 25%",
-    "hetaxanthic-axanthic": "아잔틱 50%\n헷 아잔틱 50%",
-    "sable-hetchoco": "세이블 헷 초초 25%\n세이블 25%\n헷 초초 25%\n노멀 25%",
-    "sable-sable": "슈퍼 세이블 25%\n세이블 50%\n노멀 25%",
-    "sable-lilysable": "릴리 세이블 25%\n슈퍼 세이블 25%\n릴리 화이트 25%\n 세이블 25%",
-    "sable-hetaxanthic": "세이블 헷 아잔틱 25%\n헷 아잔틱 25%\n세이블 25%\n노멀 25%",
-    "supersable-sable": "슈퍼 세이블 50%\n세이블 50%",
-    "supersable-cappuccino": "루왁 50%\n세이블 50%",
-    "supercappuccino-sable": "루왁 50%\n카푸치노 50%",
-    "supercappuccino-axanthic": "카푸치노 헷 아잔틱 100%",
-    "supercappuccino-choco": "카푸치노 헷 초초 100%",
-    "hetchoco-hetchoco": "초초 25%\n헷 초초 50%\n노멀 25%"
-};
+const morphCombinations = { "normal-normal": "노멀 100%", "normal-axanthic": "헷 아잔틱 100%", "normal-choco": "헷 초초 100%", "normal-sable": "세이블 50%\n노멀 50%", "normal-hetaxanthic": "헷 아잔틱 50%\n노멀 50%", "normal-hetchoco": "헷 초초 50%\n노멀 50%", "normal-lilysable": "릴리 화이트 50%\n세이블 50%", "normal-supersable": "세이블 100%", "normal-supercappuccino": "카푸치노 100%", "normal-frappuccino": "릴리 화이트 50%\n카푸치노 50%", "hetaxanthic-hetaxanthic": "헷 아잔틱 50%\n아잔틱 25%\n노멀 25%", "axanthic-axanthic": "아잔틱 100%", "axanthic-sable": "세이블 헷 아잔틱 50%\n헷 아잔틱 50%", "lilywhite-axanthic": "릴리 헷 아잔틱 50%\n헷 아잔틱 50%", "axanthic-choco": "헷 아잔틱 헷 초초 100%", "axanthic-supersable": "세이블 헷 아잔틱 100%", "axanthic-lilysable": "릴리 헷 아잔틱 50%\n세이블 헷 아잔틱 50%", "axanthic-frappuccino": "릴리 헷 아잔틱 50%\n카푸치노 헷 아잔틱 50%", "axanthic-hetchoco": "헷 아잔틱 헷 초초 50%\n헷 아잔틱 50%", "choco-choco": "초초 100%", "cappuccino-hetaxanthic": "카푸치노 헷 아잔틱 25%\n헷 아잔틱 25%\n카푸치노 25%\n노멀 25%", "cappuccino-hetchoco": "카푸치노 헷 초초 25%\n헷 초초 25%\n카푸치노 25%\n노멀 25%", "lilywhite-normal": "릴리 화이트 50%\n노멀 50%", "lilywhite-hetaxanthic": "릴리 헷 아잔틱 25%\n헷 아잔틱 25%\n릴리 화이트 25%\n노멀 25%", "lilywhite-hetchoco": "릴리 헷 초초 25%\n헷 초초 25%\n릴리 화이트 25%\n노멀 25%", "lilywhite-frappuccino": "프라푸치노 25%\n릴리 화이트 25%\n슈퍼 릴리 화이트 카푸치노 (치사유전) 12.5%\n슈퍼 릴리 화이트 (치사유전) 12.5%\n카푸치노 12.5%\n노멀 12.5%", "lilywhite-lilysable": "슈퍼 릴리 화이트 (치사유전) 25%\n릴리 세이블 25%\n릴리 화이트 25%\n세이블 25%", "lilywhite-supercappuccino": "프라푸치노 50%\n카푸치노 50%", "lilywhite-supersable": "릴리 세이블 50%\n세이블 50%", "lilywhite-choco": "릴리 화이트 헷 초초 50%\n헷 초초 50%", "lilywhite-lilywhite": "릴리 화이트 50%\n슈퍼 릴리 화이트 (치사유전) 25%\n노멀 25%", "lilywhite-cappuccino": "릴리 화이트 25%\n카푸치노 25%\n프라푸치노 25%\n노멀 25%", "lilywhite-sable": "릴리 세이블 25%\n세이블 25%\n릴리 화이트 25%\n노멀 25%", "cappuccino-cappuccino": "슈퍼 카푸치노 100%", "cappuccino-axanthic": "카푸치노 헷 아잔틱 50%\n헷 아잔틱 50%", "cappuccino-normal": "카푸치노 50%\n노멀 50%", "cappuccino-sable": "루왁 25%\n카푸치노 25%\n세이블 25%\n노멀 25%", "cappuccino-frappuccino": "프라푸치노 25%\n카푸치노 25%\n설악 12.5%\n슈퍼 카푸치노 12.5%\n릴리 화이트 12.5%\n노멀 12.5%", "supercappuccino-cappuccino": "슈퍼 카푸치노 50%\n카푸치노 50%", "hetaxanthic-hetchoco": "헷 아잔틱 헷 초초 25%\n헷 아잔틱 25%\n헷 초초 25%\n노멀 25%", "frappuccino-lilysable": "슈퍼 릴리 화이트 (치사유전) 25%\n프라푸치노 25%\n릴리 세이블 25%\n루왁 25%", "frappuccino-sable": "릴리 화이트 25%\n카푸치노 25%\n릴리 세이블 25%\n루왁 25%", "frappuccino-frappuccino": "프라푸치노 50%\n릴리 화이트 12.5%\n카푸치노 12.5%\n슈퍼 릴리 화이트 (치사유전) 6.25%\n슈퍼 카푸치노 6.25%\n슈퍼 릴리 화이트 슈퍼 카푸치노 (치사유전) 6.25%\n노멀 6.25%", "liljantik-hetaxanthic": "아잔틱 25%\n릴잔틱 25%\n릴리 헷 아잔틱 25%\n헷 아잔틱 25%", "liljantik-axanthic": "아잔틱 50%\n릴잔틱 50%", "liljantik-normal": "릴리 헷 아잔틱 50%\n헷 아잔틱 50%", "choco-hetchoco": "초초 50%\n헷 초초 50%", "choco-cappuccino": "카푸치노 헷 초초 50%\n헷 초초 50%", "choco-frappuccino": "릴리 헷 초초 50%\n카푸치노 헷 초초 50%", "hetaxanthic-sable": "세이블 헷 아잔틱 25%\n헷 아잔틱 25%\n세이블 25%\n노멀 25%", "hetaxanthic-frappuccino": "릴리 헷 아잔틱 25%\n카푸치노 헷 아잔틱 25%\n릴리 화이트 25%\n카푸치노 25%", "hetaxanthic-axanthic": "아잔틱 50%\n헷 아잔틱 50%", "sable-hetchoco": "세이블 헷 초초 25%\n세이블 25%\n헷 초초 25%\n노멀 25%", "sable-sable": "슈퍼 세이블 25%\n세이블 50%\n노멀 25%", "sable-lilysable": "릴리 세이블 25%\n슈퍼 세이블 25%\n릴리 화이트 25%\n 세이블 25%", "sable-hetaxanthic": "세이블 헷 아잔틱 25%\n헷 아잔틱 25%\n세이블 25%\n노멀 25%", "supersable-sable": "슈퍼 세이블 50%\n세이블 50%", "supersable-cappuccino": "루왁 50%\n세이블 50%", "supercappuccino-sable": "루왁 50%\n카푸치노 50%", "supercappuccino-axanthic": "카푸치노 헷 아잔틱 100%", "supercappuccino-choco": "카푸치노 헷 초초 100%", "hetchoco-hetchoco": "초초 25%\n헷 초초 50%\n노멀 25%" };
 
 window.runMorphCalculation = function() {
-    const v1 = document.getElementById("morphCalc-parent1").value;
-    const v2 = document.getElementById("morphCalc-parent2").value;
-    const key = `${v1}-${v2}`;
-    const reverseKey = `${v2}-${v1}`;
-    
-    const rawResult = morphCombinations[key] || morphCombinations[reverseKey];
-    const resultText = rawResult ? rawResult.replace(/\n/g, '<br>') : "현재 데이터베이스에 없는 조합이거나,<br>메이팅 데이터가 부족합니다.";
-
-    document.getElementById('calc-result-list').innerHTML = resultText;
+    const v1 = document.getElementById("morphCalc-parent1").value, v2 = document.getElementById("morphCalc-parent2").value;
+    const rawResult = morphCombinations[`${v1}-${v2}`] || morphCombinations[`${v2}-${v1}`];
+    document.getElementById('calc-result-list').innerHTML = rawResult ? rawResult.replace(/\n/g, '<br>') : "현재 데이터베이스에 없는 조합이거나,<br>메이팅 데이터가 부족합니다.";
     document.getElementById('calc-result-area').classList.remove('hidden');
 };
 
-// ===== 동기화 & 백업 =====
 window.saveAndStartSync = function() {
-    const code = document.getElementById('syncCodeInput').value.trim();
-    const configStr = document.getElementById('firebaseConfigInput').value.trim();
+    const code = document.getElementById('syncCodeInput').value.trim(), configStr = document.getElementById('firebaseConfigInput').value.trim();
     if(!code || !configStr) return alert("코드와 Config를 입력하세요.");
-    
-    try {
-        JSON.parse(configStr);
-        localStorage.setItem('gecko_sync_code', code);
-        localStorage.setItem('gecko_firebase_config', configStr);
-        if(window.initFirebase) window.initFirebase(configStr, code);
-        window.closeSyncModal();
-    } catch (e) {
-        alert("Firebase 연결 정보 형식이 잘못되었습니다. JSON 포맷인지 확인해 주세요.");
-    }
+    try { JSON.parse(configStr); localStorage.setItem('gecko_sync_code', code); localStorage.setItem('gecko_firebase_config', configStr); if(window.initFirebase) window.initFirebase(configStr, code); window.closeSyncModal(); } 
+    catch (e) { alert("Firebase 연결 정보 형식이 잘못되었습니다. JSON 포맷인지 확인해 주세요."); }
 };
 
-window.disconnectSync = function() {
-    if(confirm("클라우드 동기화를 해제하시겠습니까?\n(로컬 데이터는 그대로 유지됩니다)")) {
-        localStorage.removeItem('gecko_sync_code');
-        localStorage.removeItem('gecko_firebase_config');
-        window.location.reload();
-    }
-};
+window.disconnectSync = function() { if(confirm("클라우드 동기화를 해제하시겠습니까?\n(로컬 데이터는 그대로 유지됩니다)")) { localStorage.removeItem('gecko_sync_code'); localStorage.removeItem('gecko_firebase_config'); window.location.reload(); } };
 
 window.exportDataToJson = function() {
-    try{
-        const s="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(window.appData,null,2));
-        const a=document.createElement('a');
-        a.setAttribute("href",s);
-        a.setAttribute("download",`gecko_backup_${getTodayFormatted()}.json`);
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.showToast("백업 다운로드 완료");
-    }catch(e){ window.showToast("백업 실패"); }
+    try{ const s="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(window.appData,null,2)), a=document.createElement('a'); a.setAttribute("href",s); a.setAttribute("download",`gecko_backup_${getTodayFormatted()}.json`); document.body.appendChild(a); a.click(); a.remove(); window.showToast("백업 다운로드 완료"); }
+    catch(e){ window.showToast("백업 실패"); }
 };
 
 window.importDataFromJson = function(event) {
@@ -972,24 +561,17 @@ window.importDataFromJson = function(event) {
     const reader=new FileReader();
     reader.onload=function(e){
         try{
-            let s=e.target.result.trim();
-            if(s.charCodeAt(0)===0xFEFF) s=s.slice(1);
-            const im=JSON.parse(s);
-            if(!im.geckos&&!im.eggs&&!im.logs) throw new Error("유효한 데이터가 없습니다.");
+            let s=e.target.result.trim(); if(s.charCodeAt(0)===0xFEFF) s=s.slice(1);
+            const im=JSON.parse(s); if(!im.geckos&&!im.eggs&&!im.logs) throw new Error("유효한 데이터가 없습니다.");
             if(confirm("데이터를 가져오시겠습니까?")){
                 const d={geckos:[],logs:[],eggs:[],infertileEggs:[],lineage:[]};
                 if(im.geckos) d.geckos=im.geckos.map(g=>{const p={...g};if(p.hatchDate)p.hatchDate=normalizeDateStr(p.hatchDate);return p;});
                 if(im.logs) d.logs=im.logs.map(l=>{const p={...l};if(p.date)p.date=normalizeDateStr(p.date);return p;});
                 if(im.eggs) d.eggs=im.eggs.map(egg=>{const p={...egg};if(p.layDate)p.layDate=normalizeDateStr(p.layDate);if(p.mateDate)p.mateDate=normalizeDateStr(p.mateDate);delete p.syncCode;delete p.date;delete p.createdAt;return p;});
                 if(im.infertileEggs) d.infertileEggs=im.infertileEggs.map(e=>{const p={...e};if(p.layDate)p.layDate=normalizeDateStr(p.layDate);return p;});
-                if(im.lineage) d.lineage=im.lineage;
-                window.appData=d;
-                saveData();
-                window.showToast(`복구 완료! (${d.geckos.length}개체, ${d.eggs.length}산란)`);
+                if(im.lineage) d.lineage=im.lineage; window.appData=d; saveData(); window.showToast(`복구 완료! (${d.geckos.length}개체, ${d.eggs.length}산란)`);
             }
-        }catch(err){
-            console.error(err); window.showToast("파일 오류: "+err.message);
-        }
+        }catch(err){ console.error(err); window.showToast("파일 오류: "+err.message); }
         event.target.value='';
     };
     reader.readAsText(file);
