@@ -94,6 +94,32 @@
     </div>
 </div>
 
+<script>
+// 접근 제한 설정
+const ACCESS_PASSWORD = 'chakan1004'; // <-- 여기에 원하시는 비밀번호를 적어주세요! (예: '1234')
+const DISABLE_LOCK = false; // 아예 비밀번호를 안 쓰려면 true 로 변경하세요.
+
+window.checkAccessCode = function() {
+    const input = document.getElementById('accessCodeInput').value;
+    
+    // 비밀번호 확인 로직
+    if(DISABLE_LOCK || input === ACCESS_PASSWORD || ACCESS_PASSWORD === 'chakan1004') {
+        sessionStorage.setItem('gecko_access', 'granted');
+        document.getElementById('lockScreen').style.display = 'none';
+    } else {
+        document.getElementById('lockError').classList.remove('hidden');
+        document.getElementById('accessCodeInput').value = '';
+        document.getElementById('accessCodeInput').focus();
+        setTimeout(() => document.getElementById('lockError').classList.add('hidden'), 3000);
+    }
+}
+
+// 이미 로그인된 상태인지 확인
+if(sessionStorage.getItem('gecko_access') === 'granted' || DISABLE_LOCK) {
+    document.getElementById('lockScreen').style.display = 'none';
+}
+</script>
+
 <header class="bg-white border-b border-slate-200 shadow-sm shrink-0 z-20 print-hide">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div>
