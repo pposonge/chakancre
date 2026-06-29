@@ -23,6 +23,37 @@ function normalizeDateStr(s) {
     m=s.match(/^(\d{4})(\d{2})(\d{2})$/); if(m) return m[1]+'-'+m[2]+'-'+m[3];
     return s;
 }
+// 차수(1~12차)별로 서로 다른 색상의 배지를 생성하는 함수
+function getClutchBadge(clutch) {
+    if (!clutch) return '';
+    
+    // "1차", "2" 등 다양한 입력값에서 숫자만 추출합니다.
+    const num = parseInt(clutch.toString().replace(/[^0-9]/g, ''));
+    
+    // 숫자가 아니거나 1~12 범위를 벗어날 경우 기본 회색 스타일 적용
+    if (isNaN(num)) {
+        return `<span class="inline-block ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded bg-slate-50 text-slate-600 border border-slate-200">${clutch}</span>`;
+    }
+    
+    // 1차부터 12차까지 고유한 Tailwind 색상 스타일 정의
+    const styles = {
+        1: "bg-red-50 text-red-600 border-red-200",          // 1차: 빨강
+        2: "bg-orange-50 text-orange-600 border-orange-200",    // 2차: 주황
+        3: "bg-amber-50 text-amber-600 border-amber-200",      // 3차: 귤색
+        4: "bg-yellow-50 text-yellow-600 border-yellow-200",    // 4차: 노랑
+        5: "bg-lime-50 text-lime-600 border-lime-200",          // 5차: 연두
+        6: "bg-green-50 text-green-600 border-green-200",      // 6차: 초록
+        7: "bg-emerald-50 text-emerald-600 border-emerald-200",  // 7차: 에메랄드
+        8: "bg-teal-50 text-teal-600 border-teal-200",          // 8차: 청록
+        9: "bg-sky-50 text-sky-600 border-sky-200",            // 9차: 하늘
+        10: "bg-blue-50 text-blue-600 border-blue-200",        // 10차: 파랑
+        11: "bg-purple-50 text-purple-600 border-purple-200",    // 11차: 보라
+        12: "bg-pink-50 text-pink-600 border-pink-200"          // 12차: 핑크
+    };
+    
+    const styleClass = styles[num] || "bg-slate-50 text-slate-600 border-slate-200";
+    return `<span class="inline-block ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded border ${styleClass}">${num}차</span>`;
+}
 function getSafeDate(s) {
     if(!s) return null; if(typeof s==='number'){const d=new Date(s);return isNaN(d)?null:d;} if(typeof s!=='string') return null;
     let m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(m){const d=new Date(+m[1],m[2]-1,+m[3]);return isNaN(d)?null:d;}
@@ -553,7 +584,7 @@ window.renderHistoryTimeline = function(){
 };
 window.deleteLog = function(d,id){window.appData.logs=window.appData.logs.filter(l=>!(l.date===d&&l.geckoId==id));saveData();};
 
-// ===== 산란/부화 =====
+// ===== 산란/ㅊ  =====
 window.setBreedType = function(type){
     document.getElementById('breed-type').value=type;
     if(type==='fertile'){document.getElementById('btn-fertile').className='flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-brand-600 text-white transition';document.getElementById('btn-infertile').className='flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-500 transition';document.getElementById('fertile-fields').classList.remove('hidden');document.getElementById('infertile-fields').classList.add('hidden');document.getElementById('temp-field').classList.remove('hidden');document.getElementById('lay-date-label').innerText='산란일 (선택)';document.getElementById('breed-form-title').innerHTML='<i class="fa-solid fa-heart text-pink-500"></i> 교배/산란 등록';}
@@ -621,7 +652,7 @@ window.renderBreedingTable = function(){
     processed.forEach(egg=>{
         const sc=egg.state==='hatched'?'bg-slate-100 text-slate-400':(egg.state==='waiting'?'bg-amber-50 text-amber-600':'bg-brand-50 text-brand-600 border-brand-200 border');
         const pulse = (egg.diff >= 0 && egg.diff <= 7) ? 'animate-pulse text-red-600 border-red-200 bg-red-50' : sc;
-        h+=`<tr class="hover:bg-slate-50/80"><td class="px-3 py-3 font-semibold"><div class="text-[11px]"><span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300">×</span> <span class="text-pink-500">♀</span>${egg.female}</div>${egg.memo?'<div class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[120px]">'+egg.memo+'</div>':''}</td><td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(egg.mateDate)}</td><td class="px-2 py-3 text-center font-bold font-mono whitespace-nowrap ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</td><td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td><td class="px-3 py-3 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">${egg.exp}</td><td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td><td class="px-2 py-3 text-center space-x-2"><button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
+ h+=`<tr class="hover:bg-slate-50/80"><td class="px-3 py-3 font-semibold"><div class="text-[11px] flex items-center flex-wrap"><span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300 px-1">×</span> <span class="text-pink-500">♀</span>${egg.female}${getClutchBadge(egg.clutch)}</div>${egg.memo?'<div class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[120px]">'+egg.memo+'</div>':''}</td>...
     });
     document.getElementById('eggTableBody').innerHTML=h||`<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
 };
@@ -776,7 +807,7 @@ window.checkInbreeding = function(){
     resEl.classList.remove('hidden');
 };
 
-// ===== 모프 계산기 =====
+// ===== 착한크레 모프 계산기 =====
 const morphCombinations = {
     "normal-normal": "노멀 100%",
     "normal-axanthic": "헷 아잔틱 100%",
