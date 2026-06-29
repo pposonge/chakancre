@@ -625,14 +625,151 @@ window.checkInbreeding = function(){
     resEl.classList.remove('hidden');
 };
 
-const morphCombinations = { "normal-normal": "노멀 100%", "normal-axanthic": "헷 아잔틱 100%", "normal-choco": "헷 초초 100%", "normal-sable": "세이블 50%\n노멀 50%", "normal-hetaxanthic": "헷 아잔틱 50%\n노멀 50%", "normal-hetchoco": "헷 초초 50%\n노멀 50%", "normal-lilysable": "릴리 화이트 50%\n세이블 50%", "normal-supersable": "세이블 100%", "normal-supercappuccino": "카푸치노 100%", "normal-frappuccino": "릴리 화이트 50%\n카푸치노 50%", "hetaxanthic-hetaxanthic": "헷 아잔틱 50%\n아잔틱 25%\n노멀 25%", "axanthic-axanthic": "아잔틱 100%", "axanthic-sable": "세이블 헷 아잔틱 50%\n헷 아잔틱 50%", "lilywhite-axanthic": "릴리 헷 아잔틱 50%\n헷 아잔틱 50%", "axanthic-choco": "헷 아잔틱 헷 초초 100%", "axanthic-supersable": "세이블 헷 아잔틱 100%", "axanthic-lilysable": "릴리 헷 아잔틱 50%\n세이블 헷 아잔틱 50%", "axanthic-frappuccino": "릴리 헷 아잔틱 50%\n카푸치노 헷 아잔틱 50%", "axanthic-hetchoco": "헷 아잔틱 헷 초초 50%\n헷 아잔틱 50%", "choco-choco": "초초 100%", "cappuccino-hetaxanthic": "카푸치노 헷 아잔틱 25%\n헷 아잔틱 25%\n카푸치노 25%\n노멀 25%", "cappuccino-hetchoco": "카푸치노 헷 초초 25%\n헷 초초 25%\n카푸치노 25%\n노멀 25%", "lilywhite-normal": "릴리 화이트 50%\n노멀 50%", "lilywhite-hetaxanthic": "릴리 헷 아잔틱 25%\n헷 아잔틱 25%\n릴리 화이트 25%\n노멀 25%", "lilywhite-hetchoco": "릴리 헷 초초 25%\n헷 초초 25%\n릴리 화이트 25%\n노멀 25%", "lilywhite-frappuccino": "프라푸치노 25%\n릴리 화이트 25%\n슈퍼 릴리 화이트 카푸치노 (치사유전) 12.5%\n슈퍼 릴리 화이트 (치사유전) 12.5%\n카푸치노 12.5%\n노멀 12.5%", "lilywhite-lilysable": "슈퍼 릴리 화이트 (치사유전) 25%\n릴리 세이블 25%\n릴리 화이트 25%\n세이블 25%", "lilywhite-supercappuccino": "프라푸치노 50%\n카푸치노 50%", "lilywhite-supersable": "릴리 세이블 50%\n세이블 50%", "lilywhite-choco": "릴리 화이트 헷 초초 50%\n헷 초초 50%", "lilywhite-lilywhite": "릴리 화이트 50%\n슈퍼 릴리 화이트 (치사유전) 25%\n노멀 25%", "lilywhite-cappuccino": "릴리 화이트 25%\n카푸치노 25%\n프라푸치노 25%\n노멀 25%", "lilywhite-sable": "릴리 세이블 25%\n세이블 25%\n릴리 화이트 25%\n노멀 25%", "cappuccino-cappuccino": "슈퍼 카푸치노 100%", "cappuccino-axanthic": "카푸치노 헷 아잔틱 50%\n헷 아잔틱 50%", "cappuccino-normal": "카푸치노 50%\n노멀 50%", "cappuccino-sable": "루왁 25%\n카푸치노 25%\n세이블 25%\n노멀 25%", "cappuccino-frappuccino": "프라푸치노 25%\n카푸치노 25%\n설악 12.5%\n슈퍼 카푸치노 12.5%\n릴리 화이트 12.5%\n노멀 12.5%", "supercappuccino-cappuccino": "슈퍼 카푸치노 50%\n카푸치노 50%", "hetaxanthic-hetchoco": "헷 아잔틱 헷 초초 25%\n헷 아잔틱 25%\n헷 초초 25%\n노멀 25%", "frappuccino-lilysable": "슈퍼 릴리 화이트 (치사유전) 25%\n프라푸치노 25%\n릴리 세이블 25%\n루왁 25%", "frappuccino-sable": "릴리 화이트 25%\n카푸치노 25%\n릴리 세이블 25%\n루왁 25%", "frappuccino-frappuccino": "프라푸치노 50%\n릴리 화이트 12.5%\n카푸치노 12.5%\n슈퍼 릴리 화이트 (치사유전) 6.25%\n슈퍼 카푸치노 6.25%\n슈퍼 릴리 화이트 슈퍼 카푸치노 (치사유전) 6.25%\n노멀 6.25%", "liljantik-hetaxanthic": "아잔틱 25%\n릴잔틱 25%\n릴리 헷 아잔틱 25%\n헷 아잔틱 25%", "liljantik-axanthic": "아잔틱 50%\n릴잔틱 50%", "liljantik-normal": "릴리 헷 아잔틱 50%\n헷 아잔틱 50%", "choco-hetchoco": "초초 50%\n헷 초초 50%", "choco-cappuccino": "카푸치노 헷 초초 50%\n헷 초초 50%", "choco-frappuccino": "릴리 헷 초초 50%\n카푸치노 헷 초초 50%", "hetaxanthic-sable": "세이블 헷 아잔틱 25%\n헷 아잔틱 25%\n세이블 25%\n노멀 25%", "hetaxanthic-frappuccino": "릴리 헷 아잔틱 25%\n카푸치노 헷 아잔틱 25%\n릴리 화이트 25%\n카푸치노 25%", "hetaxanthic-axanthic": "아잔틱 50%\n헷 아잔틱 50%", "sable-hetchoco": "세이블 헷 초초 25%\n세이블 25%\n헷 초초 25%\n노멀 25%", "sable-sable": "슈퍼 세이블 25%\n세이블 50%\n노멀 25%", "sable-lilysable": "릴리 세이블 25%\n슈퍼 세이블 25%\n릴리 화이트 25%\n 세이블 25%", "sable-hetaxanthic": "세이블 헷 아잔틱 25%\n헷 아잔틱 25%\n세이블 25%\n노멀 25%", "supersable-sable": "슈퍼 세이블 50%\n세이블 50%", "supersable-cappuccino": "루왁 50%\n세이블 50%", "supercappuccino-sable": "루왁 50%\n카푸치노 50%", "supercappuccino-axanthic": "카푸치노 헷 아잔틱 100%", "supercappuccino-choco": "카푸치노 헷 초초 100%", "hetchoco-hetchoco": "초초 25%\n헷 초초 50%\n노멀 25%" };
+// === [신규] 크레스티드 게코 유전 알고리즘 엔진 ===
 
-window.runMorphCalculation = function() {
-    const v1 = document.getElementById("morphCalc-parent1").value, v2 = document.getElementById("morphCalc-parent2").value;
-    const rawResult = morphCombinations[`${v1}-${v2}`] || morphCombinations[`${v2}-${v1}`];
-    document.getElementById('calc-result-list').innerHTML = rawResult ? rawResult.replace(/\n/g, '<br>') : "현재 데이터베이스에 없는 조합이거나,<br>메이팅 데이터가 부족합니다.";
-    document.getElementById('calc-result-area').classList.remove('hidden');
+// 계산기 폼 초기화
+window.resetMorphCalc = function() {
+    ['lily', 'cap', 'sab', 'ax', 'cho'].forEach(g => {
+        document.getElementById(`m-${g}`).value = "0";
+        document.getElementById(`f-${g}`).value = "0";
+    });
+    document.getElementById('calc-result-area').classList.add('hidden');
 };
+
+// 메인 확률 계산 실행
+window.runMorphCalculation = function() {
+    const genes = ['lily', 'cap', 'sab', 'ax', 'cho'];
+    const m = {}, f = {};
+    
+    // UI에서 유전자 값 읽기 (0: 없음/노멀, 1: 이형접합/헷, 2: 동형접합/슈퍼폼/발현)
+    genes.forEach(g => {
+        m[g] = parseInt(document.getElementById(`m-${g}`).value);
+        f[g] = parseInt(document.getElementById(`f-${g}`).value);
+    });
+
+    // 멘델의 분리의 법칙 (단일 유전자 교배 확률 계산)
+    function crossGene(mVal, fVal) {
+        const p1 = mVal === 0 ? [0,0] : (mVal === 1 ? [0,1] : [1,1]);
+        const p2 = fVal === 0 ? [0,0] : (fVal === 1 ? [0,1] : [1,1]);
+        const results = [];
+        for (let i of p1) { for (let j of p2) { results.push(i + j); } }
+        
+        const counts = {0: 0, 1: 0, 2: 0};
+        results.forEach(r => counts[r]++);
+        return { 0: counts[0]/4, 1: counts[1]/4, 2: counts[2]/4 };
+    }
+
+    const probs = {};
+    genes.forEach(g => { probs[g] = crossGene(m[g], f[g]); });
+
+    // 모든 유전자의 독립의 법칙 (조합 계산)
+    let outcomes = [];
+    function buildCombos(geneIndex, currentProb, currentGenotype) {
+        if (geneIndex === genes.length) {
+            if (currentProb > 0) outcomes.push({ prob: currentProb, geno: { ...currentGenotype } });
+            return;
+        }
+        const g = genes[geneIndex];
+        const p = probs[g];
+        for (let val in p) {
+            if (p[val] > 0) {
+                currentGenotype[g] = parseInt(val);
+                buildCombos(geneIndex + 1, currentProb * p[val], currentGenotype);
+            }
+        }
+    }
+    
+    buildCombos(0, 1, {});
+
+    // 결과값 정리 (같은 모프명끼리 확률 합산)
+    const phenotypeProbs = {};
+    outcomes.forEach(out => {
+        const name = getPhenotypeName(out.geno);
+        if (!phenotypeProbs[name]) phenotypeProbs[name] = 0;
+        phenotypeProbs[name] += out.prob;
+    });
+
+    // 확률 높은 순으로 정렬 후 UI 렌더링
+    const sortedHtml = Object.entries(phenotypeProbs)
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, prob]) => {
+            const percentage = (prob * 100).toFixed(2).replace('.00', '');
+            const isLethal = name.includes('치사');
+            const nameStyle = isLethal ? 'text-red-600 font-bold' : 'text-slate-800 font-bold';
+            const numStyle = isLethal ? 'text-red-500' : 'text-indigo-600';
+            return `<div class="flex justify-between items-center border-b border-indigo-100 py-2.5 last:border-0 hover:bg-white transition px-2 rounded">
+                        <span class="${nameStyle}">${name}</span> 
+                        <span class="${numStyle} font-black text-sm">${percentage}%</span>
+                    </div>`;
+        }).join('');
+
+    document.getElementById('calc-result-list').innerHTML = sortedHtml;
+    document.getElementById('calc-result-area').classList.remove('hidden');
+    
+    // 결과창으로 스크롤 부드럽게 이동
+    setTimeout(() => {
+        const area = document.getElementById('calc-result-area');
+        area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+};
+
+// 유전자 조합을 한국어 모프명으로 변환하는 로직 (Naming Rules)
+function getPhenotypeName(geno) {
+    let { lily, cap, sab, ax, cho } = geno;
+    let isLethal = (lily === 2); // 릴리 동형접합은 치사
+    let nameParts = [];
+
+    if (isLethal) nameParts.push("슈퍼 릴리 화이트 (치사유전)");
+
+    // 1. 공우성(베이스 모프) 조합 네이밍 
+    let base = "";
+    if (lily === 1 && cap === 1 && sab === 0) base = "프라푸치노";
+    else if (lily === 1 && cap === 0 && sab === 1) base = "릴리 세이블";
+    else if (lily === 0 && cap === 1 && sab === 1) base = "루왁";
+    else if (lily === 1 && cap === 2 && sab === 0) base = "설악";
+    else if (lily === 1 && cap === 0 && sab === 2) base = "슈퍼 세이블 릴리 화이트";
+    else if (lily === 0 && cap === 2 && sab === 1) base = "슈퍼 카푸치노 세이블";
+    else if (lily === 0 && cap === 1 && sab === 2) base = "카푸치노 슈퍼 세이블";
+    else if (lily === 0 && cap === 2 && sab === 2) base = "슈퍼 카푸치노 슈퍼 세이블";
+    else if (lily === 1 && cap === 1 && sab === 1) base = "프라푸치노 세이블";
+    else {
+        let p = [];
+        if (!isLethal && lily === 1) p.push("릴리 화이트");
+        if (cap === 1) p.push("카푸치노");
+        if (cap === 2) p.push("슈퍼 카푸치노");
+        if (sab === 1) p.push("세이블");
+        if (sab === 2) p.push("슈퍼 세이블");
+        base = p.join(" ");
+    }
+
+    if (base && !isLethal) nameParts.push(base);
+    if (nameParts.length === 0 && !isLethal) nameParts.push("노멀");
+
+    // 2. 열성(아잔틱, 초초) 조합 네이밍
+    let axName = "";
+    if (ax === 2) {
+        let first = nameParts[0] || "";
+        if (first.includes("릴리 화이트")) { nameParts[0] = first.replace("릴리 화이트", "릴잔틱"); }
+        else if (first === "노멀") { nameParts[0] = "아잔틱"; }
+        else { axName = "아잔틱"; }
+    } else if (ax === 1) { axName = "헷 아잔틱"; }
+
+    let choName = "";
+    if (cho === 2) {
+        let first = nameParts[0] || "";
+        if (first === "노멀" && ax !== 2) { nameParts[0] = "초초"; }
+        else { choName = "초초"; }
+    } else if (cho === 1) { choName = "헷 초초"; }
+
+    if (axName && axName !== nameParts[0]) nameParts.push(axName);
+    if (choName && choName !== nameParts[0]) nameParts.push(choName);
+
+    // 이름 다듬기 (예: 노멀 헷 아잔틱 -> 헷 아잔틱)
+    let finalName = nameParts.join(" ");
+    if (finalName.startsWith("노멀 ") && finalName !== "노멀") finalName = finalName.replace("노멀 ", "");
+    
+    return finalName.trim();
+}
 
 window.saveAndStartSync = function() {
     const code = document.getElementById('syncCodeInput').value.trim(), configStr = document.getElementById('firebaseConfigInput').value.trim();
