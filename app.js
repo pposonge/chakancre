@@ -13,12 +13,15 @@ let currentDetailGeckoId = null;
 let viewMode = 'grid';
 let weightChartInstance = null;
 
-// 페이지네이션 전역 변수
+// 모든 리스트에 대한 페이지네이션 전역 변수 설정 (100% 적용)
+window.geckoPage = 1;
+window.matrixPage = 1;
+window.logFormPage = 1;
 window.historyPage = 1;
 window.eggPage = 1;
 window.infertilePage = 1;
 window.lineagePage = 1;
-window.ITEMS_PER_PAGE = 20;
+window.ITEMS_PER_PAGE = 20; // 20줄 제한
 
 function normalizeDateStr(s) {
     if(!s||typeof s!=='string') return s||'';
@@ -76,43 +79,57 @@ function initCalendars() {
     });
 }
 
-// 공통 페이지네이션 렌더링 함수
-window.renderPagination = function(containerId, totalPages, currentPage, changeFnName) {
+// 공통 페이지네이션 렌더링 함수 (항상 표시되어 작동 중임을 안내함)
+window.renderPagination = function(containerId, totalItems, totalPages, currentPage, changeFnName) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    if (totalPages <= 1) { container.innerHTML = ''; return; }
     
-    let html = `<div class="flex items-center space-x-1 text-xs">`;
-    html += `<button onclick="${changeFnName}(${currentPage - 1})" class="px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition" ${currentPage === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>`;
-    
-    let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(totalPages, currentPage + 2);
-    
-    if (startPage > 1) {
-        html += `<button onclick="${changeFnName}(1)" class="px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100 transition">1</button>`;
-        if (startPage > 2) html += `<span class="px-1 text-slate-400">...</span>`;
+    if (totalItems === 0) {
+        container.innerHTML = '';
+        return;
     }
-    for (let i = startPage; i <= endPage; i++) {
-        if (i === currentPage) {
-            html += `<button class="px-2.5 py-1.5 rounded-md border border-brand-500 bg-brand-50 text-brand-700 font-bold shadow-sm">${i}</button>`;
-        } else {
-            html += `<button onclick="${changeFnName}(${i})" class="px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100 transition">${i}</button>`;
+
+    let html = `<div class="flex flex-col sm:flex-row items-center justify-between gap-3 w-full text-xs text-slate-500 px-1 py-2">`;
+    html += `<div>총 <span class="font-bold text-slate-700">${totalItems}</span>건 <span class="text-[10px] text-slate-400 font-normal ml-1">(${currentPage}/${totalPages} 페이지)</span></div>`;
+    
+    if (totalPages > 1) {
+        html += `<div class="flex items-center space-x-1">`;
+        html += `<button onclick="${changeFnName}(${currentPage - 1})" class="px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-white transition shadow-sm" ${currentPage === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>`;
+        
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+        
+        if (startPage > 1) {
+            html += `<button onclick="${changeFnName}(1)" class="px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm">1</button>`;
+            if (startPage > 2) html += `<span class="px-1 text-slate-400">...</span>`;
         }
+        for (let i = startPage; i <= endPage; i++) {
+            if (i === currentPage) {
+                html += `<button class="px-2.5 py-1.5 rounded-md border border-brand-500 bg-brand-50 text-brand-700 font-bold shadow-sm">${i}</button>`;
+            } else {
+                html += `<button onclick="${changeFnName}(${i})" class="px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm">${i}</button>`;
+            }
+        }
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) html += `<span class="px-1 text-slate-400">...</span>`;
+            html += `<button onclick="${changeFnName}(${totalPages})" class="px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm">${totalPages}</button>`;
+        }
+        
+        html += `<button onclick="${changeFnName}(${currentPage + 1})" class="px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-white transition shadow-sm" ${currentPage === totalPages ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>`;
+        html += `</div>`;
     }
-    if (endPage < totalPages) {
-        if (endPage < totalPages - 1) html += `<span class="px-1 text-slate-400">...</span>`;
-        html += `<button onclick="${changeFnName}(${totalPages})" class="px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100 transition">${totalPages}</button>`;
-    }
-    
-    html += `<button onclick="${changeFnName}(${currentPage + 1})" class="px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition" ${currentPage === totalPages ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>`;
     html += `</div>`;
     container.innerHTML = html;
 };
 
-window.changeHistoryPage = function(p) { window.historyPage = p; window.renderHistoryTimeline(); };
-window.changeEggPage = function(p) { window.eggPage = p; window.renderBreedingTable(); };
-window.changeInfertilePage = function(p) { window.infertilePage = p; window.renderInfertileTable(); };
-window.changeLineagePage = function(p) { window.lineagePage = p; window.renderLineageList(); };
+// 페이지 변경 동작 함수들 (클릭 시 해당 표 최상단으로 자동 스크롤)
+window.changeMatrixPage = function(p) { window.matrixPage = p; window.renderMatrixTable(); document.getElementById('matrix-table').scrollIntoView({behavior: 'smooth', block: 'nearest'}); };
+window.changeGeckoPage = function(p) { window.geckoPage = p; window.renderGeckos(); document.getElementById('tab-geckos').scrollIntoView({behavior: 'smooth', block: 'start'}); };
+window.changeLogFormPage = function(p) { window.saveDailyLogs(true); window.logFormPage = p; window.renderLogInputForm(); document.getElementById('log-entry-list').scrollTo(0,0); };
+window.changeHistoryPage = function(p) { window.historyPage = p; window.renderHistoryTimeline(); document.getElementById('history-timeline-body').scrollIntoView({behavior: 'smooth', block: 'nearest'}); };
+window.changeEggPage = function(p) { window.eggPage = p; window.renderBreedingTable(); document.getElementById('eggTableBody').scrollIntoView({behavior: 'smooth', block: 'nearest'}); };
+window.changeInfertilePage = function(p) { window.infertilePage = p; window.renderInfertileTable(); document.getElementById('infertileTableBody').scrollIntoView({behavior: 'smooth', block: 'nearest'}); };
+window.changeLineagePage = function(p) { window.lineagePage = p; window.renderLineageList(); document.getElementById('lineage-list-body').scrollIntoView({behavior: 'smooth', block: 'nearest'}); };
 
 window.onload = function() {
     const local = localStorage.getItem('gecko_integrated_data');
@@ -146,7 +163,11 @@ window.onload = function() {
 
 window.refreshAllViews = function() { window.updateDashboardStats(); window.populateBreedingYears(); window.updateBreedingDashboard(); window.renderMatrixTable(); window.renderGeckos(); window.populateDropdowns(); window.populateLineageDropdowns(); window.renderLogInputForm(); window.renderHistoryTimeline(); window.renderBreedingTable(); window.renderInfertileTable(); window.renderLineageList(); };
 
-function saveData() { localStorage.setItem('gecko_integrated_data', JSON.stringify(window.appData)); if(window.syncToCloud) window.syncToCloud(); window.refreshAllViews(); }
+function saveData(skipRefresh = false) { 
+    localStorage.setItem('gecko_integrated_data', JSON.stringify(window.appData)); 
+    if(window.syncToCloud) window.syncToCloud(); 
+    if(!skipRefresh) window.refreshAllViews(); 
+}
 
 window.switchTab = function(id) {
     document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
@@ -156,9 +177,9 @@ window.switchTab = function(id) {
     document.getElementById('main-scroll-area').scrollTo(0,0); setTimeout(initCalendars,100);
 };
 
-window.navigateToGeckos = function(type,wc){window.switchTab('geckos'); if(type==='weight') document.getElementById('gecko-sort').value='weight-desc'; else if(type!=='all') document.getElementById('gecko-sort').value=type; window.renderGeckos(wc||null);}
+window.navigateToGeckos = function(type,wc){window.switchTab('geckos'); if(type==='weight') document.getElementById('gecko-sort').value='weight-desc'; else if(type!=='all') document.getElementById('gecko-sort').value=type; window.geckoPage=1; window.renderGeckos(wc||null);}
 window.navigateToLogs = function(){window.switchTab('logs');}
-window.navigateToBreeding = function(type){window.switchTab('breeding'); if(type==='hatch') document.getElementById('eggFilter').value='incubating'; window.renderBreedingTable();}
+window.navigateToBreeding = function(type){window.switchTab('breeding'); if(type==='hatch') document.getElementById('eggFilter').value='incubating'; window.eggPage=1; window.renderBreedingTable();}
 window.openSyncModal = function() { document.getElementById('syncModal').classList.remove('hidden'); }
 window.closeSyncModal = function() { document.getElementById('syncModal').classList.add('hidden'); }
 window.openMorphCalcModal = function() { document.getElementById('morphCalcModal').classList.remove('hidden'); }
@@ -237,11 +258,23 @@ window.filterBreedingTable = function(filterValue) {
 
 window.renderMatrixTable = function(){
     const allDates=[...new Set(window.appData.logs.map(l=>l.date))].sort((a,b)=>getSafeDate(a)-getSafeDate(b)); const displayDates = allDates.slice(-5);
-    if(displayDates.length === 0) { document.getElementById('matrix-table').innerHTML = '<tr><td class="p-4 text-slate-400">기록이 없습니다.</td></tr>'; return; }
+    if(displayDates.length === 0) { 
+        document.getElementById('matrix-table').innerHTML = '<tr><td class="p-4 text-slate-400">기록이 없습니다.</td></tr>'; 
+        document.getElementById('matrix-pagination').innerHTML = '';
+        return; 
+    }
+    
+    // 매트릭스 표 페이지네이션 처리
+    const totalItems = window.appData.geckos.length;
+    const totalPages = Math.ceil(totalItems / window.ITEMS_PER_PAGE) || 1;
+    if(window.matrixPage > totalPages) window.matrixPage = totalPages;
+    const paginatedGeckos = window.appData.geckos.slice((window.matrixPage - 1) * window.ITEMS_PER_PAGE, window.matrixPage * window.ITEMS_PER_PAGE);
+
     let h=`<thead><tr class="bg-slate-100/50 text-slate-500 font-semibold border-b border-slate-200"><th class="py-2.5 px-2">개체명</th>`;
     displayDates.forEach(d=>h+=`<th class="py-2.5 px-2 text-brand-700">${formatDisplayDate(d)}</th>`);
     h+=`</tr></thead><tbody class="divide-y divide-slate-100">`;
-    window.appData.geckos.forEach(g=>{
+    
+    paginatedGeckos.forEach(g=>{
         h+=`<tr><td class="py-3 px-2 font-bold text-slate-800 whitespace-nowrap">${g.name} <span class="text-[10px] text-slate-400">(${g.gender})</span></td>`;
         displayDates.forEach(d=>{
             const l=window.appData.logs.find(x=>x.geckoId===g.id&&x.date===d); let diffHtml = '';
@@ -253,7 +286,10 @@ window.renderMatrixTable = function(){
         });
         h+=`</tr>`;
     });
-    h+=`</tbody>`; document.getElementById('matrix-table').innerHTML=h;
+    h+=`</tbody>`; 
+    document.getElementById('matrix-table').innerHTML=h;
+    
+    window.renderPagination('matrix-pagination', totalItems, totalPages, window.matrixPage, 'window.changeMatrixPage');
 };
 
 function getSortedGeckos(wf) {
@@ -311,8 +347,16 @@ window.saveGecko = function(keepOpen){
 };
 
 window.renderGeckos = function(wf){
-    let sorted = getSortedGeckos(wf); let html='';
-    sorted.forEach(g=>{
+    let sorted = getSortedGeckos(wf);
+    
+    // 개체 관리 표 페이지네이션 처리
+    const totalItems = sorted.length;
+    const totalPages = Math.ceil(totalItems / window.ITEMS_PER_PAGE) || 1;
+    if(window.geckoPage > totalPages) window.geckoPage = totalPages;
+    const paginatedData = sorted.slice((window.geckoPage - 1) * window.ITEMS_PER_PAGE, window.geckoPage * window.ITEMS_PER_PAGE);
+
+    let html='';
+    paginatedData.forEach(g=>{
         const w=getLastWeight(g.id), ws=w!==null?w+'g':'기록없음', care=getLastCareSummary(g.id), cd=care.date?formatShortDate(care.date):'-', age=getAge(g.hatchDate);
         const thumb=(g.images&&g.images.length)?g.images[0]:null;
         const thHtml=thumb?`<img src="${thumb}" class="object-cover w-full h-full">`:`<div class="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300 text-3xl"><i class="fa-solid fa-lizard"></i></div>`;
@@ -335,6 +379,8 @@ window.renderGeckos = function(wf){
         }
     });
     document.getElementById('gecko-container').innerHTML=html||`<div class="col-span-full py-10 text-center text-slate-400 text-sm">등록된 개체가 없습니다.</div>`;
+    
+    window.renderPagination('gecko-pagination', totalItems, totalPages, window.geckoPage, 'window.changeGeckoPage');
 };
 
 window.openDetailModal = function(id){
@@ -385,20 +431,46 @@ window.populateDropdowns = function(){
 };
 
 window.renderLogInputForm = function(){
-    const date=document.getElementById('log-date').value; let h='';
-    getSortedGeckos().forEach(g=>{const l=window.appData.logs.find(x=>x.geckoId==g.id&&x.date===date)||{weight:'',feed:'',clean:''};
-    h+=`<div class="p-3 bg-slate-50 border border-slate-200 rounded-xl"><div class="text-xs font-bold text-slate-700 mb-2">${g.name} <span class="font-normal text-slate-400">(${g.gender})</span></div><div class="flex gap-2"><input type="number" step="0.01" id="w-${g.id}" value="${l.weight}" placeholder="무게(g)" class="w-1/3 text-xs border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-brand-500"><select id="f-${g.id}" class="w-1/3 text-[11px] border border-slate-300 rounded-lg px-1 py-1.5 bg-white"><option value="">피딩 안함</option><option value="사료" ${l.feed==='사료'?'selected':''}>사료</option><option value="충식" ${l.feed==='충식'?'selected':''}>충식</option><option value="둘다" ${l.feed==='둘다'?'selected':''}>둘다</option></select><select id="c-${g.id}" class="w-1/3 text-[11px] border border-slate-300 rounded-lg px-1 py-1.5 bg-white"><option value="">청소 안함</option><option value="물그릇" ${l.clean==='물그릇'?'selected':''}>물그릇</option><option value="간단청소" ${l.clean==='간단청소'?'selected':''}>간단청소</option><option value="대청소" ${l.clean==='대청소'?'selected':''}>대청소</option></select></div></div>`;});
+    const date=document.getElementById('log-date').value; 
+    let sorted = getSortedGeckos();
+    
+    // 로그 입력 폼 페이지네이션 처리
+    const totalItems = sorted.length;
+    const totalPages = Math.ceil(totalItems / window.ITEMS_PER_PAGE) || 1;
+    if(window.logFormPage > totalPages) window.logFormPage = totalPages;
+    const paginatedData = sorted.slice((window.logFormPage - 1) * window.ITEMS_PER_PAGE, window.logFormPage * window.ITEMS_PER_PAGE);
+
+    let h='';
+    paginatedData.forEach(g=>{
+        const l=window.appData.logs.find(x=>x.geckoId==g.id&&x.date===date)||{weight:'',feed:'',clean:''};
+        h+=`<div class="p-3 bg-slate-50 border border-slate-200 rounded-xl"><div class="text-xs font-bold text-slate-700 mb-2">${g.name} <span class="font-normal text-slate-400">(${g.gender})</span></div><div class="flex gap-2"><input type="number" step="0.01" id="w-${g.id}" value="${l.weight}" placeholder="무게(g)" class="w-1/3 text-xs border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-brand-500"><select id="f-${g.id}" class="w-1/3 text-[11px] border border-slate-300 rounded-lg px-1 py-1.5 bg-white"><option value="">피딩 안함</option><option value="사료" ${l.feed==='사료'?'selected':''}>사료</option><option value="충식" ${l.feed==='충식'?'selected':''}>충식</option><option value="둘다" ${l.feed==='둘다'?'selected':''}>둘다</option></select><select id="c-${g.id}" class="w-1/3 text-[11px] border border-slate-300 rounded-lg px-1 py-1.5 bg-white"><option value="">청소 안함</option><option value="물그릇" ${l.clean==='물그릇'?'selected':''}>물그릇</option><option value="간단청소" ${l.clean==='간단청소'?'selected':''}>간단청소</option><option value="대청소" ${l.clean==='대청소'?'selected':''}>대청소</option></select></div></div>`;
+    });
     document.getElementById('log-entry-list').innerHTML=h;
+    
+    window.renderPagination('log-form-pagination', totalItems, totalPages, window.logFormPage, 'window.changeLogFormPage');
 };
 
-window.saveDailyLogs = function(){
-    const date=normalizeDateStr(document.getElementById('log-date').value);if(!date||date.length<8)return alert('날짜를 올바르게 입력해주세요.');
+// silent 파라미터를 추가하여 페이지 이동 시 팝업 없이 자동 저장되도록 구성
+window.saveDailyLogs = function(silent = false){
+    const date=normalizeDateStr(document.getElementById('log-date').value);
+    if(!date||date.length<8) { if(!silent) alert('날짜를 올바르게 입력해주세요.'); return; }
+    
     window.appData.geckos.forEach(g=>{
-        const w=document.getElementById(`w-${g.id}`).value,f=document.getElementById(`f-${g.id}`).value,c=document.getElementById(`c-${g.id}`).value;
-        window.appData.logs=window.appData.logs.filter(l=>!(l.geckoId==g.id&&l.date===date));
-        if(w||f||c) window.appData.logs.push({date,geckoId:g.id,weight:w?parseFloat(w):'',feed:f,clean:c});
+        const wEl = document.getElementById(`w-${g.id}`);
+        const fEl = document.getElementById(`f-${g.id}`);
+        const cEl = document.getElementById(`c-${g.id}`);
+        
+        // 현재 페이지에 렌더링된 요소들만 업데이트 처리
+        if(wEl || fEl || cEl) {
+            const w = wEl ? wEl.value : '';
+            const f = fEl ? fEl.value : '';
+            const c = cEl ? cEl.value : '';
+            window.appData.logs=window.appData.logs.filter(l=>!(l.geckoId==g.id&&l.date===date));
+            if(w||f||c) window.appData.logs.push({date,geckoId:g.id,weight:w?parseFloat(w):'',feed:f,clean:c});
+        }
     });
-    saveData();window.showToast("기록 저장 완료");
+    saveData(silent); // silent가 true면 리렌더링(refreshAllViews) 건너뜀 (깜빡임 방지)
+    if(!silent) window.showToast("기록 전체 저장 완료");
 };
 
 window.renderHistoryTimeline = function(){
@@ -413,8 +485,9 @@ window.renderHistoryTimeline = function(){
         if(sortM === 'female-first') { const diff = {'암':0,'수':1,'미구분':2}[a.gender] - {'암':0,'수':1,'미구분':2}[b.gender]; return diff !== 0 ? diff : getSafeDate(b.date)-getSafeDate(a.date); }
     });
     
-    // 페이지네이션 처리
-    const totalPages = Math.ceil(processed.length / window.ITEMS_PER_PAGE) || 1;
+    // 전체 기록 표 페이지네이션 처리
+    const totalItems = processed.length;
+    const totalPages = Math.ceil(totalItems / window.ITEMS_PER_PAGE) || 1;
     if(window.historyPage > totalPages) window.historyPage = totalPages;
     const paginatedData = processed.slice((window.historyPage - 1) * window.ITEMS_PER_PAGE, window.historyPage * window.ITEMS_PER_PAGE);
 
@@ -426,9 +499,9 @@ window.renderHistoryTimeline = function(){
     });
     document.getElementById('history-timeline-body').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
     
-    window.renderPagination('history-pagination', totalPages, window.historyPage, 'window.changeHistoryPage');
+    window.renderPagination('history-pagination', totalItems, totalPages, window.historyPage, 'window.changeHistoryPage');
 };
-window.deleteLog = function(d,id){window.appData.logs=window.appData.logs.filter(l=>!(l.date===d&&l.geckoId==id));saveData();window.renderHistoryTimeline();};
+window.deleteLog = function(d,id){window.appData.logs=window.appData.logs.filter(l=>!(l.date===d&&l.geckoId==id));saveData();};
 
 window.autoFillMateDate = function() {
     if(editingEggId) return;
@@ -503,8 +576,9 @@ window.renderBreedingTable = function(){
         return 0;
     });
     
-    // 페이지네이션 처리
-    const totalPages = Math.ceil(processed.length / window.ITEMS_PER_PAGE) || 1;
+    // 산란 부화 표 페이지네이션 처리
+    const totalItems = processed.length;
+    const totalPages = Math.ceil(totalItems / window.ITEMS_PER_PAGE) || 1;
     if(window.eggPage > totalPages) window.eggPage = totalPages;
     const paginatedData = processed.slice((window.eggPage - 1) * window.ITEMS_PER_PAGE, window.eggPage * window.ITEMS_PER_PAGE);
 
@@ -516,7 +590,7 @@ window.renderBreedingTable = function(){
     });
     document.getElementById('eggTableBody').innerHTML=h||`<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
     
-    window.renderPagination('egg-pagination', totalPages, window.eggPage, 'window.changeEggPage');
+    window.renderPagination('egg-pagination', totalItems, totalPages, window.eggPage, 'window.changeEggPage');
 };
 
 window.renderInfertileTable = function() {
@@ -528,8 +602,9 @@ window.renderInfertileTable = function() {
         return 0;
     });
     
-    // 페이지네이션 처리
-    const totalPages = Math.ceil(eggs.length / window.ITEMS_PER_PAGE) || 1;
+    // 무정란 기록 표 페이지네이션 처리
+    const totalItems = eggs.length;
+    const totalPages = Math.ceil(totalItems / window.ITEMS_PER_PAGE) || 1;
     if(window.infertilePage > totalPages) window.infertilePage = totalPages;
     const paginatedData = eggs.slice((window.infertilePage - 1) * window.ITEMS_PER_PAGE, window.infertilePage * window.ITEMS_PER_PAGE);
 
@@ -541,7 +616,7 @@ window.renderInfertileTable = function() {
     });
     document.getElementById('infertileTableBody').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
     
-    window.renderPagination('infertile-pagination', totalPages, window.infertilePage, 'window.changeInfertilePage');
+    window.renderPagination('infertile-pagination', totalItems, totalPages, window.infertilePage, 'window.changeInfertilePage');
 };
 
 window.populateLineageDropdowns = function(){
@@ -563,8 +638,9 @@ window.saveLineage = function(){
 window.selectLineageViewTarget = function(id) { document.getElementById('lineage-view-target').value = id; document.getElementById('lineage-view-target').scrollIntoView({behavior: 'smooth', block: 'center'}); window.renderLineageTree(); };
 
 window.renderLineageList = function(){
-    // 페이지네이션 처리
-    const totalPages = Math.ceil(window.appData.lineage.length / window.ITEMS_PER_PAGE) || 1;
+    // 등록된 혈통 관계 목록 표 페이지네이션 처리
+    const totalItems = window.appData.lineage.length;
+    const totalPages = Math.ceil(totalItems / window.ITEMS_PER_PAGE) || 1;
     if(window.lineagePage > totalPages) window.lineagePage = totalPages;
     const paginatedData = window.appData.lineage.slice((window.lineagePage - 1) * window.ITEMS_PER_PAGE, window.lineagePage * window.ITEMS_PER_PAGE);
 
@@ -575,7 +651,7 @@ window.renderLineageList = function(){
     });
     document.getElementById('lineage-list-body').innerHTML=h||`<tr><td colspan="4" class="text-center py-6 text-slate-400 text-xs">등록된 혈통 관계가 없습니다.</td></tr>`;
     
-    window.renderPagination('lineage-pagination', totalPages, window.lineagePage, 'window.changeLineagePage');
+    window.renderPagination('lineage-pagination', totalItems, totalPages, window.lineagePage, 'window.changeLineagePage');
 };
 
 window.deleteLineage = function(childId){window.appData.lineage=window.appData.lineage.filter(l=>l.childId!=childId);saveData();};
@@ -625,152 +701,6 @@ window.checkInbreeding = function(){
     resEl.classList.remove('hidden');
 };
 
-// === [신규] 크레스티드 게코 유전 알고리즘 엔진 ===
-
-// 계산기 폼 초기화
-window.resetMorphCalc = function() {
-    ['lily', 'cap', 'sab', 'ax', 'cho'].forEach(g => {
-        document.getElementById(`m-${g}`).value = "0";
-        document.getElementById(`f-${g}`).value = "0";
-    });
-    document.getElementById('calc-result-area').classList.add('hidden');
-};
-
-// 메인 확률 계산 실행
-window.runMorphCalculation = function() {
-    const genes = ['lily', 'cap', 'sab', 'ax', 'cho'];
-    const m = {}, f = {};
-    
-    // UI에서 유전자 값 읽기 (0: 없음/노멀, 1: 이형접합/헷, 2: 동형접합/슈퍼폼/발현)
-    genes.forEach(g => {
-        m[g] = parseInt(document.getElementById(`m-${g}`).value);
-        f[g] = parseInt(document.getElementById(`f-${g}`).value);
-    });
-
-    // 멘델의 분리의 법칙 (단일 유전자 교배 확률 계산)
-    function crossGene(mVal, fVal) {
-        const p1 = mVal === 0 ? [0,0] : (mVal === 1 ? [0,1] : [1,1]);
-        const p2 = fVal === 0 ? [0,0] : (fVal === 1 ? [0,1] : [1,1]);
-        const results = [];
-        for (let i of p1) { for (let j of p2) { results.push(i + j); } }
-        
-        const counts = {0: 0, 1: 0, 2: 0};
-        results.forEach(r => counts[r]++);
-        return { 0: counts[0]/4, 1: counts[1]/4, 2: counts[2]/4 };
-    }
-
-    const probs = {};
-    genes.forEach(g => { probs[g] = crossGene(m[g], f[g]); });
-
-    // 모든 유전자의 독립의 법칙 (조합 계산)
-    let outcomes = [];
-    function buildCombos(geneIndex, currentProb, currentGenotype) {
-        if (geneIndex === genes.length) {
-            if (currentProb > 0) outcomes.push({ prob: currentProb, geno: { ...currentGenotype } });
-            return;
-        }
-        const g = genes[geneIndex];
-        const p = probs[g];
-        for (let val in p) {
-            if (p[val] > 0) {
-                currentGenotype[g] = parseInt(val);
-                buildCombos(geneIndex + 1, currentProb * p[val], currentGenotype);
-            }
-        }
-    }
-    
-    buildCombos(0, 1, {});
-
-    // 결과값 정리 (같은 모프명끼리 확률 합산)
-    const phenotypeProbs = {};
-    outcomes.forEach(out => {
-        const name = getPhenotypeName(out.geno);
-        if (!phenotypeProbs[name]) phenotypeProbs[name] = 0;
-        phenotypeProbs[name] += out.prob;
-    });
-
-    // 확률 높은 순으로 정렬 후 UI 렌더링
-    const sortedHtml = Object.entries(phenotypeProbs)
-        .sort((a, b) => b[1] - a[1])
-        .map(([name, prob]) => {
-            const percentage = (prob * 100).toFixed(2).replace('.00', '');
-            const isLethal = name.includes('치사');
-            const nameStyle = isLethal ? 'text-red-600 font-bold' : 'text-slate-800 font-bold';
-            const numStyle = isLethal ? 'text-red-500' : 'text-indigo-600';
-            return `<div class="flex justify-between items-center border-b border-indigo-100 py-2.5 last:border-0 hover:bg-white transition px-2 rounded">
-                        <span class="${nameStyle}">${name}</span> 
-                        <span class="${numStyle} font-black text-sm">${percentage}%</span>
-                    </div>`;
-        }).join('');
-
-    document.getElementById('calc-result-list').innerHTML = sortedHtml;
-    document.getElementById('calc-result-area').classList.remove('hidden');
-    
-    // 결과창으로 스크롤 부드럽게 이동
-    setTimeout(() => {
-        const area = document.getElementById('calc-result-area');
-        area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 50);
-};
-
-// 유전자 조합을 한국어 모프명으로 변환하는 로직 (Naming Rules)
-function getPhenotypeName(geno) {
-    let { lily, cap, sab, ax, cho } = geno;
-    let isLethal = (lily === 2); // 릴리 동형접합은 치사
-    let nameParts = [];
-
-    if (isLethal) nameParts.push("슈퍼 릴리 화이트 (치사유전)");
-
-    // 1. 공우성(베이스 모프) 조합 네이밍 
-    let base = "";
-    if (lily === 1 && cap === 1 && sab === 0) base = "프라푸치노";
-    else if (lily === 1 && cap === 0 && sab === 1) base = "릴리 세이블";
-    else if (lily === 0 && cap === 1 && sab === 1) base = "루왁";
-    else if (lily === 1 && cap === 2 && sab === 0) base = "설악";
-    else if (lily === 1 && cap === 0 && sab === 2) base = "슈퍼 세이블 릴리 화이트";
-    else if (lily === 0 && cap === 2 && sab === 1) base = "슈퍼 카푸치노 세이블";
-    else if (lily === 0 && cap === 1 && sab === 2) base = "카푸치노 슈퍼 세이블";
-    else if (lily === 0 && cap === 2 && sab === 2) base = "슈퍼 카푸치노 슈퍼 세이블";
-    else if (lily === 1 && cap === 1 && sab === 1) base = "프라푸치노 세이블";
-    else {
-        let p = [];
-        if (!isLethal && lily === 1) p.push("릴리 화이트");
-        if (cap === 1) p.push("카푸치노");
-        if (cap === 2) p.push("슈퍼 카푸치노");
-        if (sab === 1) p.push("세이블");
-        if (sab === 2) p.push("슈퍼 세이블");
-        base = p.join(" ");
-    }
-
-    if (base && !isLethal) nameParts.push(base);
-    if (nameParts.length === 0 && !isLethal) nameParts.push("노멀");
-
-    // 2. 열성(아잔틱, 초초) 조합 네이밍
-    let axName = "";
-    if (ax === 2) {
-        let first = nameParts[0] || "";
-        if (first.includes("릴리 화이트")) { nameParts[0] = first.replace("릴리 화이트", "릴잔틱"); }
-        else if (first === "노멀") { nameParts[0] = "아잔틱"; }
-        else { axName = "아잔틱"; }
-    } else if (ax === 1) { axName = "헷 아잔틱"; }
-
-    let choName = "";
-    if (cho === 2) {
-        let first = nameParts[0] || "";
-        if (first === "노멀" && ax !== 2) { nameParts[0] = "초초"; }
-        else { choName = "초초"; }
-    } else if (cho === 1) { choName = "헷 초초"; }
-
-    if (axName && axName !== nameParts[0]) nameParts.push(axName);
-    if (choName && choName !== nameParts[0]) nameParts.push(choName);
-
-    // 이름 다듬기 (예: 노멀 헷 아잔틱 -> 헷 아잔틱)
-    let finalName = nameParts.join(" ");
-    if (finalName.startsWith("노멀 ") && finalName !== "노멀") finalName = finalName.replace("노멀 ", "");
-    
-    return finalName.trim();
-}
-
 window.saveAndStartSync = function() {
     const code = document.getElementById('syncCodeInput').value.trim(), configStr = document.getElementById('firebaseConfigInput').value.trim();
     if(!code || !configStr) return alert("코드와 Config를 입력하세요.");
@@ -805,3 +735,136 @@ window.importDataFromJson = function(event) {
     };
     reader.readAsText(file);
 };
+
+// === [신규] 크레스티드 게코 유전 알고리즘 엔진 ===
+window.resetMorphCalc = function() {
+    ['lily', 'cap', 'sab', 'ax', 'cho'].forEach(g => {
+        document.getElementById(`m-${g}`).value = "0";
+        document.getElementById(`f-${g}`).value = "0";
+    });
+    document.getElementById('calc-result-area').classList.add('hidden');
+};
+
+window.runMorphCalculation = function() {
+    const genes = ['lily', 'cap', 'sab', 'ax', 'cho'];
+    const m = {}, f = {};
+    
+    genes.forEach(g => {
+        m[g] = parseInt(document.getElementById(`m-${g}`).value);
+        f[g] = parseInt(document.getElementById(`f-${g}`).value);
+    });
+
+    function crossGene(mVal, fVal) {
+        const p1 = mVal === 0 ? [0,0] : (mVal === 1 ? [0,1] : [1,1]);
+        const p2 = fVal === 0 ? [0,0] : (fVal === 1 ? [0,1] : [1,1]);
+        const results = [];
+        for (let i of p1) { for (let j of p2) { results.push(i + j); } }
+        
+        const counts = {0: 0, 1: 0, 2: 0};
+        results.forEach(r => counts[r]++);
+        return { 0: counts[0]/4, 1: counts[1]/4, 2: counts[2]/4 };
+    }
+
+    const probs = {};
+    genes.forEach(g => { probs[g] = crossGene(m[g], f[g]); });
+
+    let outcomes = [];
+    function buildCombos(geneIndex, currentProb, currentGenotype) {
+        if (geneIndex === genes.length) {
+            if (currentProb > 0) outcomes.push({ prob: currentProb, geno: { ...currentGenotype } });
+            return;
+        }
+        const g = genes[geneIndex];
+        const p = probs[g];
+        for (let val in p) {
+            if (p[val] > 0) {
+                currentGenotype[g] = parseInt(val);
+                buildCombos(geneIndex + 1, currentProb * p[val], currentGenotype);
+            }
+        }
+    }
+    
+    buildCombos(0, 1, {});
+
+    const phenotypeProbs = {};
+    outcomes.forEach(out => {
+        const name = getPhenotypeName(out.geno);
+        if (!phenotypeProbs[name]) phenotypeProbs[name] = 0;
+        phenotypeProbs[name] += out.prob;
+    });
+
+    const sortedHtml = Object.entries(phenotypeProbs)
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, prob]) => {
+            const percentage = (prob * 100).toFixed(2).replace('.00', '');
+            const isLethal = name.includes('치사');
+            const nameStyle = isLethal ? 'text-red-600 font-bold' : 'text-slate-800 font-bold';
+            const numStyle = isLethal ? 'text-red-500' : 'text-indigo-600';
+            return `<div class="flex justify-between items-center border-b border-indigo-100 py-2.5 last:border-0 hover:bg-white transition px-2 rounded">
+                        <span class="${nameStyle}">${name}</span> 
+                        <span class="${numStyle} font-black text-sm">${percentage}%</span>
+                    </div>`;
+        }).join('');
+
+    document.getElementById('calc-result-list').innerHTML = sortedHtml;
+    document.getElementById('calc-result-area').classList.remove('hidden');
+    
+    setTimeout(() => {
+        const area = document.getElementById('calc-result-area');
+        area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+};
+
+function getPhenotypeName(geno) {
+    let { lily, cap, sab, ax, cho } = geno;
+    let isLethal = (lily === 2); 
+    let nameParts = [];
+
+    if (isLethal) nameParts.push("슈퍼 릴리 화이트 (치사유전)");
+
+    let base = "";
+    if (lily === 1 && cap === 1 && sab === 0) base = "프라푸치노";
+    else if (lily === 1 && cap === 0 && sab === 1) base = "릴리 세이블";
+    else if (lily === 0 && cap === 1 && sab === 1) base = "루왁";
+    else if (lily === 1 && cap === 2 && sab === 0) base = "설악";
+    else if (lily === 1 && cap === 0 && sab === 2) base = "슈퍼 세이블 릴리 화이트";
+    else if (lily === 0 && cap === 2 && sab === 1) base = "슈퍼 카푸치노 세이블";
+    else if (lily === 0 && cap === 1 && sab === 2) base = "카푸치노 슈퍼 세이블";
+    else if (lily === 0 && cap === 2 && sab === 2) base = "슈퍼 카푸치노 슈퍼 세이블";
+    else if (lily === 1 && cap === 1 && sab === 1) base = "프라푸치노 세이블";
+    else {
+        let p = [];
+        if (!isLethal && lily === 1) p.push("릴리 화이트");
+        if (cap === 1) p.push("카푸치노");
+        if (cap === 2) p.push("슈퍼 카푸치노");
+        if (sab === 1) p.push("세이블");
+        if (sab === 2) p.push("슈퍼 세이블");
+        base = p.join(" ");
+    }
+
+    if (base && !isLethal) nameParts.push(base);
+    if (nameParts.length === 0 && !isLethal) nameParts.push("노멀");
+
+    let axName = "";
+    if (ax === 2) {
+        let first = nameParts[0] || "";
+        if (first.includes("릴리 화이트")) { nameParts[0] = first.replace("릴리 화이트", "릴잔틱"); }
+        else if (first === "노멀") { nameParts[0] = "아잔틱"; }
+        else { axName = "아잔틱"; }
+    } else if (ax === 1) { axName = "헷 아잔틱"; }
+
+    let choName = "";
+    if (cho === 2) {
+        let first = nameParts[0] || "";
+        if (first === "노멀" && ax !== 2) { nameParts[0] = "초초"; }
+        else { choName = "초초"; }
+    } else if (cho === 1) { choName = "헷 초초"; }
+
+    if (axName && axName !== nameParts[0]) nameParts.push(axName);
+    if (choName && choName !== nameParts[0]) nameParts.push(choName);
+
+    let finalName = nameParts.join(" ");
+    if (finalName.startsWith("노멀 ") && finalName !== "노멀") finalName = finalName.replace("노멀 ", "");
+    
+    return finalName.trim();
+}

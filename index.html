@@ -148,6 +148,7 @@
             <div class="overflow-x-auto hide-scroll">
                 <table class="w-full text-center border-collapse text-xs min-w-[800px]" id="matrix-table"></table>
             </div>
+            <div id="matrix-pagination" class="flex justify-center p-3 border-t border-slate-100 bg-slate-50/50"></div>
         </div>
     </div>
 
@@ -155,7 +156,7 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-4">
             <h1 class="text-lg font-bold text-slate-900">개체 관리</h1>
             <div class="flex items-center gap-3 w-full md:w-auto flex-wrap">
-                <select id="gecko-sort" onchange="window.renderGeckos(); window.renderLogInputForm();" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 bg-white shadow-sm flex-1 md:flex-none">
+                <select id="gecko-sort" onchange="window.geckoPage=1; window.logFormPage=1; window.renderGeckos(); window.renderLogInputForm();" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 bg-white shadow-sm flex-1 md:flex-none">
                     <option value="수" selected>수컷 우선</option>
                     <option value="암">암컷 우선</option>
                     <option value="미구분">미구분 우선</option>
@@ -172,6 +173,7 @@
             </div>
         </div>
         <div id="gecko-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 transition-all"></div>
+        <div id="gecko-pagination" class="flex justify-center bg-white p-3 rounded-xl shadow-sm border border-slate-200 mt-4"></div>
     </div>
 
     <div id="tab-logs" class="tab-content space-y-6 max-w-6xl mx-auto">
@@ -185,8 +187,9 @@
                 <div class="border-t border-slate-100 pt-3">
                     <label class="block text-[11px] font-semibold text-slate-500 mb-2">개체별 상태 입력 <span class="font-normal text-[9px]">(개체관리 정렬순)</span></label>
                     <div id="log-entry-list" class="space-y-3 max-h-[50vh] overflow-y-auto pr-1 hide-scroll"></div>
+                    <div id="log-form-pagination" class="pt-2 mt-2 border-t border-slate-100 flex justify-center"></div>
                 </div>
-                <button type="button" onclick="window.saveDailyLogs()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-lg transition shadow-sm">기록 저장하기</button>
+                <button type="button" onclick="window.saveDailyLogs()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-lg transition shadow-sm">기록 전체 저장하기</button>
             </div>
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-3 mb-3 gap-2">
@@ -508,8 +511,7 @@
             <div id="calc-result-area" class="hidden animate-fadeIn">
                 <h4 class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-chart-pie text-indigo-500"></i> 자손 모프 유전 확률</h4>
                 <div class="bg-white p-4 rounded-xl border border-indigo-200 shadow-sm">
-                    <div id="calc-result-list" class="space-y-0.5 text-[13px]">
-                        </div>
+                    <div id="calc-result-list" class="space-y-0.5 text-[13px]"></div>
                 </div>
                 <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg mt-3">
                     <p class="text-[10px] text-amber-700 leading-relaxed font-medium">※ 본 계산기는 독립의 법칙에 따른 멘델 유전 이론 확률입니다. <br>※ 66% 헷(가능성)은 계산에 포함되지 않으며, 실제 부화 결과는 확률적 편차가 존재할 수 있습니다.</p>
