@@ -13,6 +13,13 @@ let currentDetailGeckoId = null;
 let viewMode = 'grid';
 let weightChartInstance = null;
 
+// 페이지네이션 전역 변수
+window.historyPage = 1;
+window.eggPage = 1;
+window.infertilePage = 1;
+window.lineagePage = 1;
+window.ITEMS_PER_PAGE = 20;
+
 function normalizeDateStr(s) {
     if(!s||typeof s!=='string') return s||'';
     let m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(m) return s;
@@ -68,6 +75,44 @@ function initCalendars() {
         });
     });
 }
+
+// 공통 페이지네이션 렌더링 함수
+window.renderPagination = function(containerId, totalPages, currentPage, changeFnName) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    if (totalPages <= 1) { container.innerHTML = ''; return; }
+    
+    let html = `<div class="flex items-center space-x-1 text-xs">`;
+    html += `<button onclick="${changeFnName}(${currentPage - 1})" class="px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition" ${currentPage === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>`;
+    
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, currentPage + 2);
+    
+    if (startPage > 1) {
+        html += `<button onclick="${changeFnName}(1)" class="px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100 transition">1</button>`;
+        if (startPage > 2) html += `<span class="px-1 text-slate-400">...</span>`;
+    }
+    for (let i = startPage; i <= endPage; i++) {
+        if (i === currentPage) {
+            html += `<button class="px-2.5 py-1.5 rounded-md border border-brand-500 bg-brand-50 text-brand-700 font-bold shadow-sm">${i}</button>`;
+        } else {
+            html += `<button onclick="${changeFnName}(${i})" class="px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100 transition">${i}</button>`;
+        }
+    }
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) html += `<span class="px-1 text-slate-400">...</span>`;
+        html += `<button onclick="${changeFnName}(${totalPages})" class="px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-100 transition">${totalPages}</button>`;
+    }
+    
+    html += `<button onclick="${changeFnName}(${currentPage + 1})" class="px-2.5 py-1.5 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition" ${currentPage === totalPages ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>`;
+    html += `</div>`;
+    container.innerHTML = html;
+};
+
+window.changeHistoryPage = function(p) { window.historyPage = p; window.renderHistoryTimeline(); };
+window.changeEggPage = function(p) { window.eggPage = p; window.renderBreedingTable(); };
+window.changeInfertilePage = function(p) { window.infertilePage = p; window.renderInfertileTable(); };
+window.changeLineagePage = function(p) { window.lineagePage = p; window.renderLineageList(); };
 
 window.onload = function() {
     const local = localStorage.getItem('gecko_integrated_data');
@@ -185,6 +230,7 @@ window.updateBreedingDashboard = function() {
 
 window.filterBreedingTable = function(filterValue) {
     const filterSelect = document.getElementById('eggFilter'); if(filterSelect) filterSelect.value = filterValue;
+    window.eggPage = 1;
     window.renderBreedingTable(); const msg = filterValue === 'all' ? '전체' : (filterValue === 'hatched' ? '해칭완료' : (filterValue === 'incubating' ? '부화중' : '산란대기'));
     window.showToast(`${msg} 목록으로 정렬되었습니다.`); document.getElementById('eggTableBody').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 };
@@ -366,25 +412,35 @@ window.renderHistoryTimeline = function(){
         if(sortM === 'male-first') { const diff = {'수':0,'암':1,'미구분':2}[a.gender] - {'수':0,'암':1,'미구분':2}[b.gender]; return diff !== 0 ? diff : getSafeDate(b.date)-getSafeDate(a.date); }
         if(sortM === 'female-first') { const diff = {'암':0,'수':1,'미구분':2}[a.gender] - {'암':0,'수':1,'미구분':2}[b.gender]; return diff !== 0 ? diff : getSafeDate(b.date)-getSafeDate(a.date); }
     });
+    
+    // 페이지네이션 처리
+    const totalPages = Math.ceil(processed.length / window.ITEMS_PER_PAGE) || 1;
+    if(window.historyPage > totalPages) window.historyPage = totalPages;
+    const paginatedData = processed.slice((window.historyPage - 1) * window.ITEMS_PER_PAGE, window.historyPage * window.ITEMS_PER_PAGE);
+
     let h='';
-    processed.forEach(l=>{
+    paginatedData.forEach(l=>{
         const w = l.weight ? l.weight + 'g' : '-'; const f = l.feed || '-'; const c = l.clean || '-';
         const gc = l.gender === '수' ? 'text-blue-500' : (l.gender === '암' ? 'text-pink-500' : 'text-slate-400'); const gi = l.gender === '수' ? '♂' : (l.gender === '암' ? '♀' : '?');
         h += `<tr class="hover:bg-slate-50/80"><td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(l.date)}</td><td class="px-3 py-3 font-semibold text-slate-800"><span class="${gc} font-bold mr-1">${gi}</span>${l.geckoName}</td><td class="px-2 py-3 text-center font-bold text-brand-600 whitespace-nowrap">${w}</td><td class="px-2 py-3 text-center text-[11px]">${f}</td><td class="px-2 py-3 text-center text-[11px]">${c}</td><td class="px-2 py-3 text-center"><button onclick="window.deleteLog('${l.date}', ${l.geckoId})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
     });
     document.getElementById('history-timeline-body').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
+    
+    window.renderPagination('history-pagination', totalPages, window.historyPage, 'window.changeHistoryPage');
 };
 window.deleteLog = function(d,id){window.appData.logs=window.appData.logs.filter(l=>!(l.date===d&&l.geckoId==id));saveData();window.renderHistoryTimeline();};
 
 window.autoFillMateDate = function() {
     if(editingEggId) return;
-    const male = document.getElementById('breed-male').value;
-    const female = document.getElementById('breed-female').value;
+    const male = document.getElementById('breed-male').value; const female = document.getElementById('breed-female').value;
+    const mateDateInput = document.getElementById('mateDate'); mateDateInput.value = '';
+    if (mateDateInput._flatpickr) mateDateInput._flatpickr.clear();
     if(male && female) {
         const past = window.appData.eggs.filter(e => e.male === male && e.female === female && e.mateDate);
         if(past.length > 0) {
             past.sort((a,b) => getSafeDate(b.mateDate) - getSafeDate(a.mateDate));
-            document.getElementById('mateDate').value = past[0].mateDate;
+            mateDateInput.value = past[0].mateDate;
+            if (mateDateInput._flatpickr) mateDateInput._flatpickr.setDate(past[0].mateDate);
             window.showToast("✨ 기존 교배일 자동 입력됨");
         }
     }
@@ -446,14 +502,21 @@ window.renderBreedingTable = function(){
         if(sortM === 'dday') return a.diff - b.diff;
         return 0;
     });
+    
+    // 페이지네이션 처리
+    const totalPages = Math.ceil(processed.length / window.ITEMS_PER_PAGE) || 1;
+    if(window.eggPage > totalPages) window.eggPage = totalPages;
+    const paginatedData = processed.slice((window.eggPage - 1) * window.ITEMS_PER_PAGE, window.eggPage * window.ITEMS_PER_PAGE);
 
     let h='';
-    processed.forEach(egg=>{
+    paginatedData.forEach(egg=>{
         const sc=egg.state==='hatched'?'bg-slate-100 text-slate-400':(egg.state==='waiting'?'bg-amber-50 text-amber-600':'bg-brand-50 text-brand-600 border-brand-200 border');
         const pulse = (egg.diff >= 0 && egg.diff <= 7) ? 'animate-pulse text-red-600 border-red-200 bg-red-50' : sc;
         h += `<tr class="hover:bg-slate-50/80"><td class="px-3 py-3 font-semibold"><div class="text-[11px] flex items-center flex-wrap"><span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300 px-1">×</span> <span class="text-pink-500">♀</span>${egg.female} ${getClutchBadge(egg.clutch)}</div>${egg.memo?'<div class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[120px]">'+egg.memo+'</div>':''}</td><td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(egg.mateDate)}</td><td class="px-2 py-3 text-center font-bold font-mono whitespace-nowrap ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</td><td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td><td class="px-3 py-3 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">${egg.exp}</td><td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td><td class="px-2 py-3 text-center space-x-2"><button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
     });
     document.getElementById('eggTableBody').innerHTML=h||`<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
+    
+    window.renderPagination('egg-pagination', totalPages, window.eggPage, 'window.changeEggPage');
 };
 
 window.renderInfertileTable = function() {
@@ -464,13 +527,21 @@ window.renderInfertileTable = function() {
         if(sortM === 'femaleSort') return (a.female||'').localeCompare(b.female||'');
         return 0;
     });
+    
+    // 페이지네이션 처리
+    const totalPages = Math.ceil(eggs.length / window.ITEMS_PER_PAGE) || 1;
+    if(window.infertilePage > totalPages) window.infertilePage = totalPages;
+    const paginatedData = eggs.slice((window.infertilePage - 1) * window.ITEMS_PER_PAGE, window.infertilePage * window.ITEMS_PER_PAGE);
+
     let h='';
-    eggs.forEach(egg => {
+    paginatedData.forEach(egg => {
         const past = window.appData.infertileEggs.filter(e => e.female===egg.female && getSafeDate(e.layDate)<getSafeDate(egg.layDate)).sort((a,b)=>getSafeDate(b.layDate)-getSafeDate(a.layDate));
         let gap = '-'; if(past.length > 0) { const d = daysBetween(past[0].layDate, egg.layDate); if(d !== null) gap = `${d}일`; }
         h += `<tr class="hover:bg-slate-50/80"><td class="px-3 py-3 font-semibold text-slate-800 text-[11px]"><span class="text-pink-500 mr-1">♀</span>${egg.female}</td><td class="px-2 py-3 text-center text-slate-700 font-bold font-mono whitespace-nowrap">${formatDisplayDate(egg.layDate)}</td><td class="px-2 py-3 text-center"><span class="font-bold text-slate-700">${egg.eggCount}</span>알</td><td class="px-2 py-3 text-center text-xs text-slate-500">${gap}</td><td class="px-2 py-3 text-center text-[10px] text-slate-400 truncate max-w-[100px]">${egg.memo||'-'}</td><td class="px-2 py-3 text-center space-x-2"><button onclick="window.editInfertileEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteInfertileEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
     });
     document.getElementById('infertileTableBody').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
+    
+    window.renderPagination('infertile-pagination', totalPages, window.infertilePage, 'window.changeInfertilePage');
 };
 
 window.populateLineageDropdowns = function(){
@@ -492,12 +563,19 @@ window.saveLineage = function(){
 window.selectLineageViewTarget = function(id) { document.getElementById('lineage-view-target').value = id; document.getElementById('lineage-view-target').scrollIntoView({behavior: 'smooth', block: 'center'}); window.renderLineageTree(); };
 
 window.renderLineageList = function(){
+    // 페이지네이션 처리
+    const totalPages = Math.ceil(window.appData.lineage.length / window.ITEMS_PER_PAGE) || 1;
+    if(window.lineagePage > totalPages) window.lineagePage = totalPages;
+    const paginatedData = window.appData.lineage.slice((window.lineagePage - 1) * window.ITEMS_PER_PAGE, window.lineagePage * window.ITEMS_PER_PAGE);
+
     let h='';
-    window.appData.lineage.forEach(l=>{
+    paginatedData.forEach(l=>{
         const child=window.appData.geckos.find(g=>g.id==l.childId), father=l.fatherId?window.appData.geckos.find(g=>g.id==l.fatherId):null, mother=l.motherId?window.appData.geckos.find(g=>g.id==l.motherId):null;
         h+=`<tr class="hover:bg-slate-50"><td class="py-2.5 px-2 font-bold text-brand-600 cursor-pointer hover:underline" onclick="window.selectLineageViewTarget(${l.childId})">${child?child.name:'?'}</td><td class="py-2.5 px-2 text-blue-600">${father?'♂ '+father.name:'미상'}</td><td class="py-2.5 px-2 text-pink-600">${mother?'♀ '+mother.name:'미상'}</td><td class="py-2.5 px-2"><button onclick="window.deleteLineage(${l.childId})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
     });
     document.getElementById('lineage-list-body').innerHTML=h||`<tr><td colspan="4" class="text-center py-6 text-slate-400 text-xs">등록된 혈통 관계가 없습니다.</td></tr>`;
+    
+    window.renderPagination('lineage-pagination', totalPages, window.lineagePage, 'window.changeLineagePage');
 };
 
 window.deleteLineage = function(childId){window.appData.lineage=window.appData.lineage.filter(l=>l.childId!=childId);saveData();};

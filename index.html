@@ -192,14 +192,14 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-3 mb-3 gap-2">
                     <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2 shrink-0"><i class="fa-solid fa-history text-brand-600"></i> 전체 기록 타임라인</h2>
                     <div class="flex gap-2 flex-wrap">
-                        <select id="timeline-sort" onchange="window.renderHistoryTimeline()" class="border border-slate-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 bg-slate-50">
+                        <select id="timeline-sort" onchange="window.historyPage=1; window.renderHistoryTimeline()" class="border border-slate-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 bg-slate-50">
                             <option value="date-desc" selected>날짜 (최신순)</option>
                             <option value="date-asc">날짜 (오래된순)</option>
                             <option value="name-asc">이름 (A-Z)</option>
                             <option value="male-first">수컷 우선</option>
                             <option value="female-first">암컷 우선</option>
                         </select>
-                        <select id="filter-gecko" onchange="window.renderHistoryTimeline()" class="border border-slate-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 bg-slate-50"><option value="all">모든 개체보기</option></select>
+                        <select id="filter-gecko" onchange="window.historyPage=1; window.renderHistoryTimeline()" class="border border-slate-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 bg-slate-50"><option value="all">모든 개체보기</option></select>
                     </div>
                 </div>
                 <div class="overflow-x-auto hide-scroll">
@@ -208,6 +208,7 @@
                         <tbody id="history-timeline-body" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
+                <div id="history-pagination" class="flex justify-center p-3 border-t border-slate-100 bg-slate-50/50 mt-2 rounded-b-xl"></div>
             </div>
         </div>
     </div>
@@ -284,10 +285,10 @@
                     <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                         <span class="text-sm font-bold text-slate-800">부화 현황 모니터</span>
                         <div class="flex gap-2">
-                            <select id="eggFilter" onchange="window.renderBreedingTable()" class="text-[11px] border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-brand-500">
+                            <select id="eggFilter" onchange="window.eggPage=1; window.renderBreedingTable()" class="text-[11px] border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-brand-500">
                                 <option value="incubating" selected>부화 중 (미해칭)</option><option value="all">전체보기</option><option value="hatched">해칭 완료</option><option value="waiting">산란 대기</option>
                             </select>
-                            <select id="eggSort" onchange="window.renderBreedingTable()" class="text-[11px] border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-brand-500">
+                            <select id="eggSort" onchange="window.eggPage=1; window.renderBreedingTable()" class="text-[11px] border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-brand-500">
                                 <option value="layDateDesc" selected>산란일순 (최근순)</option><option value="created">최근 등록순</option><option value="maleSort">수컷 이름순 (A-Z)</option><option value="femaleSort">암컷 이름순 (A-Z)</option><option value="mateDate">교배일순</option><option value="dday">부화예정일 (D-Day)</option>
                             </select>
                         </div>
@@ -298,13 +299,14 @@
                             <tbody id="eggTableBody" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
+                    <div id="egg-pagination" class="flex justify-center p-3 border-t border-slate-100 bg-slate-50/50 mt-1 rounded-b-xl"></div>
                 </div>
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="p-4 border-b border-slate-100 bg-amber-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                         <span class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-circle-xmark text-amber-500"></i> 무정란 기록</span>
                         <div class="flex gap-2">
-                            <select id="infFilter" onchange="window.renderInfertileTable()" class="text-[11px] border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-amber-500"><option value="all" selected>전체보기</option></select>
-                            <select id="infSort" onchange="window.renderInfertileTable()" class="text-[11px] border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-amber-500"><option value="layDateDesc" selected>산란일순 (최근순)</option><option value="created">최근 등록순</option><option value="femaleSort">암컷 이름순 (A-Z)</option></select>
+                            <select id="infFilter" onchange="window.infertilePage=1; window.renderInfertileTable()" class="text-[11px] border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-amber-500"><option value="all" selected>전체보기</option></select>
+                            <select id="infSort" onchange="window.infertilePage=1; window.renderInfertileTable()" class="text-[11px] border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-amber-500"><option value="layDateDesc" selected>산란일순 (최근순)</option><option value="created">최근 등록순</option><option value="femaleSort">암컷 이름순 (A-Z)</option></select>
                         </div>
                     </div>
                     <div class="overflow-x-auto hide-scroll">
@@ -313,6 +315,7 @@
                             <tbody id="infertileTableBody" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
+                    <div id="infertile-pagination" class="flex justify-center p-3 border-t border-slate-100 bg-slate-50/50 mt-1 rounded-b-xl"></div>
                 </div>
             </div>
         </div>
@@ -351,14 +354,15 @@
                     </div>
                     <div id="lineage-tree-container" class="overflow-x-auto hide-scroll min-h-[200px] flex items-center justify-center"><p class="text-slate-400 text-sm">개체를 선택하면 혈통도가 표시됩니다.</p></div>
                 </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
                     <h2 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-list text-brand-600"></i> 등록된 혈통 관계</h2>
-                    <div class="overflow-x-auto hide-scroll">
+                    <div class="overflow-x-auto hide-scroll flex-1">
                         <table class="w-full text-xs text-center">
                             <thead><tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200"><th class="py-2 px-2">자녀 <span class="text-[10px] font-normal">(클릭 시 계보도 조회)</span></th><th class="py-2 px-2">아버지</th><th class="py-2 px-2">어머니</th><th class="py-2 px-2">삭제</th></tr></thead>
                             <tbody id="lineage-list-body" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
+                    <div id="lineage-pagination" class="flex justify-center p-3 border-t border-slate-100 bg-slate-50/50 mt-2 rounded-xl"></div>
                 </div>
             </div>
         </div>
