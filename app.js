@@ -376,6 +376,20 @@ window.renderHistoryTimeline = function(){
 };
 window.deleteLog = function(d,id){window.appData.logs=window.appData.logs.filter(l=>!(l.date===d&&l.geckoId==id));saveData();window.renderHistoryTimeline();};
 
+window.autoFillMateDate = function() {
+    if(editingEggId) return;
+    const male = document.getElementById('breed-male').value;
+    const female = document.getElementById('breed-female').value;
+    if(male && female) {
+        const past = window.appData.eggs.filter(e => e.male === male && e.female === female && e.mateDate);
+        if(past.length > 0) {
+            past.sort((a,b) => getSafeDate(b.mateDate) - getSafeDate(a.mateDate));
+            document.getElementById('mateDate').value = past[0].mateDate;
+            window.showToast("✨ 기존 교배일 자동 입력됨");
+        }
+    }
+};
+
 window.setBreedType = function(type){
     document.getElementById('breed-type').value=type;
     if(type==='fertile'){document.getElementById('btn-fertile').className='flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-brand-600 text-white transition';document.getElementById('btn-infertile').className='flex-1 py-1.5 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-500 transition';document.getElementById('fertile-fields').classList.remove('hidden');document.getElementById('infertile-fields').classList.add('hidden');document.getElementById('temp-field').classList.remove('hidden');document.getElementById('lay-date-label').innerText='산란일 (선택)';document.getElementById('breed-form-title').innerHTML='<i class="fa-solid fa-heart text-pink-500"></i> 교배/산란 등록';}
