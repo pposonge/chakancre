@@ -182,8 +182,6 @@ window.navigateToLogs = function(){window.switchTab('logs');}
 window.navigateToBreeding = function(type){window.switchTab('breeding'); if(type==='hatch') document.getElementById('eggFilter').value='incubating'; window.eggPage=1; window.renderBreedingTable();}
 window.openSyncModal = function() { document.getElementById('syncModal').classList.remove('hidden'); }
 window.closeSyncModal = function() { document.getElementById('syncModal').classList.add('hidden'); }
-window.openMorphCalcModal = function() { document.getElementById('morphCalcModal').classList.remove('hidden'); }
-window.closeMorphCalcModal = function() { document.getElementById('morphCalcModal').classList.add('hidden'); document.getElementById('calc-result-area').classList.add('hidden'); }
 window.triggerClearAll = function() {
     if(confirm("정말로 모든 데이터를 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) {
         localStorage.removeItem('gecko_integrated_data'); window.appData = { ...defaultData };
@@ -270,12 +268,12 @@ window.renderMatrixTable = function(){
     if(window.matrixPage > totalPages) window.matrixPage = totalPages;
     const paginatedGeckos = window.appData.geckos.slice((window.matrixPage - 1) * window.ITEMS_PER_PAGE, window.matrixPage * window.ITEMS_PER_PAGE);
 
-    let h=`<thead><tr class="bg-slate-100/50 text-slate-500 font-semibold border-b border-slate-200"><th class="py-2.5 px-2">개체명</th>`;
-    displayDates.forEach(d=>h+=`<th class="py-2.5 px-2 text-brand-700">${formatDisplayDate(d)}</th>`);
+    let h=`<thead><tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200"><th class="py-2.5 px-2 sticky left-0 z-10 bg-slate-100 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)]">개체명</th>`;
+    displayDates.forEach(d=>h+=`<th class="py-2.5 px-2 text-brand-700 bg-slate-100/50">${formatDisplayDate(d)}</th>`);
     h+=`</tr></thead><tbody class="divide-y divide-slate-100">`;
     
     paginatedGeckos.forEach(g=>{
-        h+=`<tr><td class="py-3 px-2 font-bold text-slate-800 whitespace-nowrap">${g.name} <span class="text-[10px] text-slate-400">(${g.gender})</span></td>`;
+        h+=`<tr><td class="py-3 px-2 font-bold text-slate-800 whitespace-nowrap sticky left-0 z-10 bg-white shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)]">${g.name} <span class="text-[10px] text-slate-400">(${g.gender})</span></td>`;
         displayDates.forEach(d=>{
             const l=window.appData.logs.find(x=>x.geckoId===g.id&&x.date===d); let diffHtml = '';
             if(l && l.weight) {
@@ -495,7 +493,7 @@ window.renderHistoryTimeline = function(){
     paginatedData.forEach(l=>{
         const w = l.weight ? l.weight + 'g' : '-'; const f = l.feed || '-'; const c = l.clean || '-';
         const gc = l.gender === '수' ? 'text-blue-500' : (l.gender === '암' ? 'text-pink-500' : 'text-slate-400'); const gi = l.gender === '수' ? '♂' : (l.gender === '암' ? '♀' : '?');
-        h += `<tr class="hover:bg-slate-50/80"><td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(l.date)}</td><td class="px-3 py-3 font-semibold text-slate-800"><span class="${gc} font-bold mr-1">${gi}</span>${l.geckoName}</td><td class="px-2 py-3 text-center font-bold text-brand-600 whitespace-nowrap">${w}</td><td class="px-2 py-3 text-center text-[11px]">${f}</td><td class="px-2 py-3 text-center text-[11px]">${c}</td><td class="px-2 py-3 text-center"><button onclick="window.deleteLog('${l.date}', ${l.geckoId})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
+        h += `<tr class="hover:bg-slate-50/80"><td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(l.date)}</td><td class="px-3 py-3 font-semibold text-slate-800 whitespace-nowrap"><span class="${gc} font-bold mr-1">${gi}</span>${l.geckoName}</td><td class="px-2 py-3 text-center font-bold text-brand-600 whitespace-nowrap">${w}</td><td class="px-2 py-3 text-center text-[11px]">${f}</td><td class="px-2 py-3 text-center text-[11px]">${c}</td><td class="px-2 py-3 text-center"><button onclick="window.deleteLog('${l.date}', ${l.geckoId})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
     });
     document.getElementById('history-timeline-body').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
     
@@ -528,14 +526,25 @@ window.setBreedType = function(type){
 
 window.saveBreeding = function(e){
     e.preventDefault(); const bt=document.getElementById('breed-type').value;
-    if(bt==='infertile'){const d={id:editingEggId||Date.now(),female:document.getElementById('infertile-female').value,layDate:normalizeDateStr(document.getElementById('layDate').value),eggCount:parseInt(document.getElementById('eggCount').value)||0,memo:document.getElementById('eggMemo').value,type:'infertile'};if(!d.female)return alert('암컷을 선택하세요.');if(!d.layDate)return alert('산란일을 입력하세요.');if(editingEggId){const i=window.appData.infertileEggs.findIndex(x=>x.id==editingEggId);if(i>-1)window.appData.infertileEggs[i]=d;}else window.appData.infertileEggs.push(d);saveData();window.resetBreedingForm();window.showToast("무정란 기록 저장");return;}
+    if(bt==='infertile'){const d={id:editingEggId||Date.now(),female:document.getElementById('infertile-female').value,layDate:normalizeDateStr(document.getElementById('layDate').value),eggCount:parseInt(document.getElementById('eggCount').value)||0,memo:document.getElementById('eggMemo').value,type:'infertile'};if(!d.female)return alert('암컷을 선택하세요.');if(!d.layDate)return alert('산란일을 입력하세요.');if(editingEggId){const i=window.appData.infertileEggs.findIndex(x=>x.id==editingEggId);if(i>-1)window.appData.infertileEggs[i]=d;}else window.appData.infertileEggs.push(d);saveData();window.resetBreedingForm(true);window.showToast("무정란 기록 저장");return;}
     const ed={male:document.getElementById('breed-male').value,female:document.getElementById('breed-female').value,mateDate:normalizeDateStr(document.getElementById('mateDate').value),layDate:normalizeDateStr(document.getElementById('layDate').value),eggCount:parseInt(document.getElementById('eggCount').value)||0,targetTemp:document.getElementById('targetTemp').value,memo:document.getElementById('eggMemo').value};
     if(!ed.male||!ed.female)return alert('수컷/암컷을 선택하세요.');if(!ed.mateDate)return alert('교배일을 입력하세요.');
     if(editingEggId){const i=window.appData.eggs.findIndex(x=>x.id==editingEggId);if(i>-1)window.appData.eggs[i]={...window.appData.eggs[i],...ed};}else window.appData.eggs.push({id:Date.now(),...ed});
-    saveData();window.resetBreedingForm();window.showToast("산란/부화 기록 저장");
+    saveData();window.resetBreedingForm(true);window.showToast("산란/부화 기록 저장");
 };
 
-window.resetBreedingForm = function(){editingEggId=null;document.getElementById('incubatorForm').reset();document.getElementById('eggCount').value=0;document.getElementById('btn-cancel-breed').classList.add('hidden');document.getElementById('btn-submit-breed').innerText='등록하기';window.setBreedType('fertile');};
+// 탭 유형 유지(무정란/유정란) 매개변수 추가 및 알 개수 기본값 2로 수정
+window.resetBreedingForm = function(preserveType = false){
+    const currentType = document.getElementById('breed-type').value;
+    editingEggId=null;
+    document.getElementById('incubatorForm').reset();
+    document.getElementById('eggCount').value=2; 
+    document.getElementById('btn-cancel-breed').classList.add('hidden');
+    document.getElementById('btn-submit-breed').innerText='등록하기';
+    if(!preserveType) window.setBreedType('fertile');
+    else window.setBreedType(currentType);
+};
+
 window.editEgg = function(id){const egg=window.appData.eggs.find(e=>e.id==id);if(!egg)return;window.setBreedType('fertile');editingEggId=id;document.getElementById('breed-male').value=egg.male;document.getElementById('breed-female').value=egg.female;document.getElementById('mateDate').value=egg.mateDate;document.getElementById('layDate').value=egg.layDate||'';document.getElementById('eggCount').value=egg.eggCount;document.getElementById('targetTemp').value=egg.targetTemp;document.getElementById('eggMemo').value=egg.memo||'';document.getElementById('btn-cancel-breed').classList.remove('hidden');document.getElementById('btn-submit-breed').innerText='수정완료';document.getElementById('main-scroll-area').scrollTo(0,0);setTimeout(initCalendars,50);};
 window.editInfertileEgg = function(id){const egg=window.appData.infertileEggs.find(e=>e.id==id);if(!egg)return;window.setBreedType('infertile');editingEggId=id;document.getElementById('infertile-female').value=egg.female;document.getElementById('layDate').value=egg.layDate||'';document.getElementById('eggCount').value=egg.eggCount;document.getElementById('eggMemo').value=egg.memo||'';document.getElementById('btn-cancel-breed').classList.remove('hidden');document.getElementById('btn-submit-breed').innerText='수정완료';document.getElementById('main-scroll-area').scrollTo(0,0);setTimeout(initCalendars,50);};
 window.deleteEgg = function(id){if(confirm('삭제하시겠습니까?')){window.appData.eggs=window.appData.eggs.filter(e=>e.id!=id);saveData();}};
@@ -586,7 +595,7 @@ window.renderBreedingTable = function(){
     paginatedData.forEach(egg=>{
         const sc=egg.state==='hatched'?'bg-slate-100 text-slate-400':(egg.state==='waiting'?'bg-amber-50 text-amber-600':'bg-brand-50 text-brand-600 border-brand-200 border');
         const pulse = (egg.diff >= 0 && egg.diff <= 7) ? 'animate-pulse text-red-600 border-red-200 bg-red-50' : sc;
-        h += `<tr class="hover:bg-slate-50/80"><td class="px-3 py-3 font-semibold"><div class="text-[11px] flex items-center flex-wrap"><span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300 px-1">×</span> <span class="text-pink-500">♀</span>${egg.female} ${getClutchBadge(egg.clutch)}</div>${egg.memo?'<div class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[120px]">'+egg.memo+'</div>':''}</td><td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(egg.mateDate)}</td><td class="px-2 py-3 text-center font-bold font-mono whitespace-nowrap ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</td><td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td><td class="px-3 py-3 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">${egg.exp}</td><td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td><td class="px-2 py-3 text-center space-x-2"><button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
+        h += `<tr class="hover:bg-slate-50/80 group"><td class="px-3 py-3 font-semibold sticky left-0 z-10 bg-white group-hover:bg-slate-50 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)]"><div class="text-[11px] flex items-center flex-wrap"><span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300 px-1">×</span> <span class="text-pink-500">♀</span>${egg.female} ${getClutchBadge(egg.clutch)}</div>${egg.memo?'<div class="text-[9px] text-slate-400 mt-0.5 truncate max-w-[120px]">'+egg.memo+'</div>':''}</td><td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(egg.mateDate)}</td><td class="px-2 py-3 text-center font-bold font-mono whitespace-nowrap ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</td><td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td><td class="px-3 py-3 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">${egg.exp}</td><td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td><td class="px-2 py-3 text-center space-x-2"><button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
     });
     document.getElementById('eggTableBody').innerHTML=h||`<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
     
@@ -735,136 +744,3 @@ window.importDataFromJson = function(event) {
     };
     reader.readAsText(file);
 };
-
-// === [신규] 크레스티드 게코 유전 알고리즘 엔진 ===
-window.resetMorphCalc = function() {
-    ['lily', 'cap', 'sab', 'ax', 'cho'].forEach(g => {
-        document.getElementById(`m-${g}`).value = "0";
-        document.getElementById(`f-${g}`).value = "0";
-    });
-    document.getElementById('calc-result-area').classList.add('hidden');
-};
-
-window.runMorphCalculation = function() {
-    const genes = ['lily', 'cap', 'sab', 'ax', 'cho'];
-    const m = {}, f = {};
-    
-    genes.forEach(g => {
-        m[g] = parseInt(document.getElementById(`m-${g}`).value);
-        f[g] = parseInt(document.getElementById(`f-${g}`).value);
-    });
-
-    function crossGene(mVal, fVal) {
-        const p1 = mVal === 0 ? [0,0] : (mVal === 1 ? [0,1] : [1,1]);
-        const p2 = fVal === 0 ? [0,0] : (fVal === 1 ? [0,1] : [1,1]);
-        const results = [];
-        for (let i of p1) { for (let j of p2) { results.push(i + j); } }
-        
-        const counts = {0: 0, 1: 0, 2: 0};
-        results.forEach(r => counts[r]++);
-        return { 0: counts[0]/4, 1: counts[1]/4, 2: counts[2]/4 };
-    }
-
-    const probs = {};
-    genes.forEach(g => { probs[g] = crossGene(m[g], f[g]); });
-
-    let outcomes = [];
-    function buildCombos(geneIndex, currentProb, currentGenotype) {
-        if (geneIndex === genes.length) {
-            if (currentProb > 0) outcomes.push({ prob: currentProb, geno: { ...currentGenotype } });
-            return;
-        }
-        const g = genes[geneIndex];
-        const p = probs[g];
-        for (let val in p) {
-            if (p[val] > 0) {
-                currentGenotype[g] = parseInt(val);
-                buildCombos(geneIndex + 1, currentProb * p[val], currentGenotype);
-            }
-        }
-    }
-    
-    buildCombos(0, 1, {});
-
-    const phenotypeProbs = {};
-    outcomes.forEach(out => {
-        const name = getPhenotypeName(out.geno);
-        if (!phenotypeProbs[name]) phenotypeProbs[name] = 0;
-        phenotypeProbs[name] += out.prob;
-    });
-
-    const sortedHtml = Object.entries(phenotypeProbs)
-        .sort((a, b) => b[1] - a[1])
-        .map(([name, prob]) => {
-            const percentage = (prob * 100).toFixed(2).replace('.00', '');
-            const isLethal = name.includes('치사');
-            const nameStyle = isLethal ? 'text-red-600 font-bold' : 'text-slate-800 font-bold';
-            const numStyle = isLethal ? 'text-red-500' : 'text-indigo-600';
-            return `<div class="flex justify-between items-center border-b border-indigo-100 py-2.5 last:border-0 hover:bg-white transition px-2 rounded">
-                        <span class="${nameStyle}">${name}</span> 
-                        <span class="${numStyle} font-black text-sm">${percentage}%</span>
-                    </div>`;
-        }).join('');
-
-    document.getElementById('calc-result-list').innerHTML = sortedHtml;
-    document.getElementById('calc-result-area').classList.remove('hidden');
-    
-    setTimeout(() => {
-        const area = document.getElementById('calc-result-area');
-        area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 50);
-};
-
-function getPhenotypeName(geno) {
-    let { lily, cap, sab, ax, cho } = geno;
-    let isLethal = (lily === 2); 
-    let nameParts = [];
-
-    if (isLethal) nameParts.push("슈퍼 릴리 화이트 (치사유전)");
-
-    let base = "";
-    if (lily === 1 && cap === 1 && sab === 0) base = "프라푸치노";
-    else if (lily === 1 && cap === 0 && sab === 1) base = "릴리 세이블";
-    else if (lily === 0 && cap === 1 && sab === 1) base = "루왁";
-    else if (lily === 1 && cap === 2 && sab === 0) base = "설악";
-    else if (lily === 1 && cap === 0 && sab === 2) base = "슈퍼 세이블 릴리 화이트";
-    else if (lily === 0 && cap === 2 && sab === 1) base = "슈퍼 카푸치노 세이블";
-    else if (lily === 0 && cap === 1 && sab === 2) base = "카푸치노 슈퍼 세이블";
-    else if (lily === 0 && cap === 2 && sab === 2) base = "슈퍼 카푸치노 슈퍼 세이블";
-    else if (lily === 1 && cap === 1 && sab === 1) base = "프라푸치노 세이블";
-    else {
-        let p = [];
-        if (!isLethal && lily === 1) p.push("릴리 화이트");
-        if (cap === 1) p.push("카푸치노");
-        if (cap === 2) p.push("슈퍼 카푸치노");
-        if (sab === 1) p.push("세이블");
-        if (sab === 2) p.push("슈퍼 세이블");
-        base = p.join(" ");
-    }
-
-    if (base && !isLethal) nameParts.push(base);
-    if (nameParts.length === 0 && !isLethal) nameParts.push("노멀");
-
-    let axName = "";
-    if (ax === 2) {
-        let first = nameParts[0] || "";
-        if (first.includes("릴리 화이트")) { nameParts[0] = first.replace("릴리 화이트", "릴잔틱"); }
-        else if (first === "노멀") { nameParts[0] = "아잔틱"; }
-        else { axName = "아잔틱"; }
-    } else if (ax === 1) { axName = "헷 아잔틱"; }
-
-    let choName = "";
-    if (cho === 2) {
-        let first = nameParts[0] || "";
-        if (first === "노멀" && ax !== 2) { nameParts[0] = "초초"; }
-        else { choName = "초초"; }
-    } else if (cho === 1) { choName = "헷 초초"; }
-
-    if (axName && axName !== nameParts[0]) nameParts.push(axName);
-    if (choName && choName !== nameParts[0]) nameParts.push(choName);
-
-    let finalName = nameParts.join(" ");
-    if (finalName.startsWith("노멀 ") && finalName !== "노멀") finalName = finalName.replace("노멀 ", "");
-    
-    return finalName.trim();
-}

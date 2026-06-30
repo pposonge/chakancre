@@ -82,7 +82,7 @@
         <button onclick="window.switchTab('logs')" id="nav-logs" class="nav-btn px-3 py-2.5 rounded-t-lg text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-brand-600 transition"><i class="fa-solid fa-file-signature mr-1"></i>성장 기록</button>
         <button onclick="window.switchTab('breeding')" id="nav-breeding" class="nav-btn px-3 py-2.5 rounded-t-lg text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-brand-600 transition"><i class="fa-solid fa-egg mr-1"></i>산란/부화</button>
         <button onclick="window.switchTab('lineage')" id="nav-lineage" class="nav-btn px-3 py-2.5 rounded-t-lg text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-brand-600 transition"><i class="fa-solid fa-sitemap mr-1"></i>혈통</button>
-        <button onclick="window.openMorphCalcModal()" class="nav-btn px-3 py-2.5 rounded-t-lg text-sm font-semibold text-slate-500 hover:text-indigo-600 transition ml-auto"><i class="fa-solid fa-dna mr-1 text-indigo-500"></i>모프 계산기</button>
+        <a href="https://kuru.co.kr/crested-gecko-morph-calculator" target="_blank" class="nav-btn px-3 py-2.5 rounded-t-lg text-sm font-semibold text-slate-500 hover:text-indigo-600 transition ml-auto"><i class="fa-solid fa-dna mr-1 text-indigo-500"></i>모프계산기</a>
     </nav>
 </header>
 
@@ -207,7 +207,7 @@
                 </div>
                 <div class="overflow-x-auto hide-scroll">
                     <table class="w-full text-center text-xs">
-                        <thead><tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200"><th class="py-2.5 px-2">날짜</th><th class="py-2.5 px-2">이름</th><th class="py-2.5 px-2">무게(g)</th><th class="py-2.5 px-2">피딩</th><th class="py-2.5 px-2">청소</th><th class="py-2.5 px-2">삭제</th></tr></thead>
+                        <thead><tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200"><th class="py-2.5 px-2 whitespace-nowrap">날짜</th><th class="py-2.5 px-2 whitespace-nowrap min-w-[100px]">이름</th><th class="py-2.5 px-2 whitespace-nowrap">무게(g)</th><th class="py-2.5 px-2 whitespace-nowrap">피딩</th><th class="py-2.5 px-2 whitespace-nowrap">청소</th><th class="py-2.5 px-2">삭제</th></tr></thead>
                         <tbody id="history-timeline-body" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
@@ -232,7 +232,7 @@
                 <div class="flex items-baseline gap-1 mt-2"><span id="statHatched" class="text-2xl font-extrabold text-blue-600">0</span><span class="text-xs text-slate-500">개</span></div>
             </div>
             <div class="bg-white p-4 rounded-xl border border-brand-200 shadow-sm flex flex-col justify-between stat-clickable" onclick="window.filterBreedingTable('incubating')">
-                <span class="text-[11px] font-bold text-brand-600">부화 대기 (Incubating)</span>
+                <span class="text-[11px] font-bold text-brand-600">부화 중 (Incubating)</span>
                 <div class="flex items-baseline gap-1 mt-2"><span id="statIncubating" class="text-2xl font-extrabold text-brand-700">0</span><span class="text-xs text-brand-600">개</span></div>
             </div>
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between stat-clickable" onclick="window.filterBreedingTable('waiting')">
@@ -268,7 +268,7 @@
                             <input type="text" id="layDate" placeholder="예: 260629 또는 달력선택" class="cal-input w-full border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono focus:ring-2 focus:ring-brand-500 bg-white">
                         </div>
                         <div class="grid grid-cols-2 gap-2">
-                            <div><label class="block text-[11px] font-semibold text-slate-500 mb-1">알 개수</label><input type="number" id="eggCount" min="0" max="2" value="0" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500"></div>
+                            <div><label class="block text-[11px] font-semibold text-slate-500 mb-1">알 개수</label><input type="number" id="eggCount" min="1" max="2" value="2" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500"></div>
                             <div id="temp-field"><label class="block text-[11px] font-semibold text-slate-500 mb-1">온도</label>
                                 <select id="targetTemp" class="w-full border border-slate-300 rounded-lg px-1 py-2 text-[11px] focus:ring-2 focus:ring-brand-500 bg-slate-50">
                                     <option value="27.0">27.0°C (42일)</option><option value="26.5">26.5°C (47일)</option><option value="26.0">26.0°C (52일)</option><option value="25.5">25.5°C (57일)</option><option value="25.0">25.0°C (62일)</option><option value="24.5">24.5°C (67일)</option><option value="24.0" selected>24.0°C (72일)</option><option value="23.5">23.5°C (77일)</option><option value="23.0">23.0°C (82일)</option><option value="22.5">22.5°C (87일)</option><option value="22.0">22.0°C (92일)</option><option value="21.5">21.5°C (97일)</option><option value="21.0">21.0°C (102일)</option>
@@ -298,7 +298,7 @@
                     </div>
                     <div class="overflow-x-auto hide-scroll">
                         <table class="w-full text-left text-xs border-collapse min-w-[700px]">
-                            <thead><tr class="bg-slate-50/50 text-[11px] font-semibold text-slate-500 border-b border-slate-200"><th class="px-3 py-3">매칭</th><th class="px-2 py-3 text-center">교배일</th><th class="px-2 py-3 text-center">산란일</th><th class="px-2 py-3 text-center">알/온도</th><th class="px-3 py-3 text-center">해칭 예정</th><th class="px-3 py-3 text-center">D-Day</th><th class="px-2 py-3 text-center">작업</th></tr></thead>
+                            <thead><tr class="bg-slate-50/50 text-[11px] font-semibold text-slate-500 border-b border-slate-200"><th class="px-3 py-3 sticky left-0 z-10 bg-slate-100 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)]">매칭</th><th class="px-2 py-3 text-center">교배일</th><th class="px-2 py-3 text-center">산란일</th><th class="px-2 py-3 text-center">알/온도</th><th class="px-3 py-3 text-center">해칭 예정</th><th class="px-3 py-3 text-center">D-Day</th><th class="px-2 py-3 text-center">작업</th></tr></thead>
                             <tbody id="eggTableBody" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
@@ -469,55 +469,6 @@
                     2. 웹 앱(</>)을 추가한 후 생성되는 **firebaseConfig { ... }** 코드의 괄호 안 내용만 그대로 복사해 위 창에 붙여넣고 저장하면 연동됩니다. (Firestore Database 활성화 필수)
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<div id="morphCalcModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[80] p-4 print-hide">
-    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden relative max-h-[95vh] flex flex-col">
-        <div class="p-4 border-b border-slate-100 bg-indigo-50 flex justify-between items-center shrink-0">
-            <h3 class="text-base font-bold text-indigo-900 flex items-center gap-2"><i class="fa-solid fa-dna text-indigo-600"></i> 크레스티드 게코 유전 모프 계산기</h3>
-            <button type="button" onclick="window.closeMorphCalcModal()" class="text-indigo-400 hover:text-indigo-600 text-lg transition"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="p-5 overflow-y-auto hide-scroll flex-1 space-y-5 bg-slate-50">
-            
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                <p class="text-xs text-center text-slate-500 mb-2 font-medium">수컷과 암컷이 보유한 유전 형질을 각각 선택하세요.</p>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="space-y-2.5 bg-blue-50/40 p-3 rounded-xl border border-blue-100">
-                        <h4 class="text-xs font-bold text-blue-700 flex items-center gap-1.5 pb-1 border-b border-blue-200/50"><i class="fa-solid fa-mars"></i> ♂ 수컷</h4>
-                        <div><label class="text-[10px] font-semibold text-slate-600 block mb-0.5">릴리 화이트 (공우성)</label><select id="m-lily" class="w-full border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 bg-white"><option value="0">없음 (노멀)</option><option value="1">릴리 화이트</option></select></div>
-                        <div><label class="text-[10px] font-semibold text-slate-600 block mb-0.5">카푸치노 (공우성)</label><select id="m-cap" class="w-full border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 bg-white"><option value="0">없음 (노멀)</option><option value="1">카푸치노</option><option value="2">슈퍼 카푸치노</option></select></div>
-                        <div><label class="text-[10px] font-semibold text-slate-600 block mb-0.5">세이블 (공우성)</label><select id="m-sab" class="w-full border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 bg-white"><option value="0">없음 (노멀)</option><option value="1">세이블</option><option value="2">슈퍼 세이블</option></select></div>
-                        <div><label class="text-[10px] font-semibold text-slate-600 block mb-0.5">아잔틱 (열성)</label><select id="m-ax" class="w-full border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 bg-white"><option value="0">없음</option><option value="1">100% 헷 아잔틱</option><option value="2">아잔틱 (발현)</option></select></div>
-                        <div><label class="text-[10px] font-semibold text-slate-600 block mb-0.5">초초/팬텀 (열성)</label><select id="m-cho" class="w-full border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 bg-white"><option value="0">없음</option><option value="1">100% 헷 초초</option><option value="2">초초 (발현)</option></select></div>
-                    </div>
-                    <div class="space-y-2.5 bg-pink-50/40 p-3 rounded-xl border border-pink-100">
-                        <h4 class="text-xs font-bold text-pink-700 flex items-center gap-1.5 pb-1 border-b border-pink-200/50"><i class="fa-solid fa-venus"></i> ♀ 암컷</h4>
-                        <div><label class="text-[10px] font-semibold text-slate-600 block mb-0.5">릴리 화이트 (공우성)</label><select id="f-lily" class="w-full border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-pink-500 bg-white"><option value="0">없음 (노멀)</option><option value="1">릴리 화이트</option></select></div>
-                        <div><label class="text-[10px] font-semibold text-slate-600 block mb-0.5">카푸치노 (공우성)</label><select id="f-cap" class="w-full border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-pink-500 bg-white"><option value="0">없음 (노멀)</option><option value="1">카푸치노</option><option value="2">슈퍼 카푸치노</option></select></div>
-                        <div><label class="text-[10px] font-semibold text-slate-600 block mb-0.5">세이블 (공우성)</label><select id="f-sab" class="w-full border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-pink-500 bg-white"><option value="0">없음 (노멀)</option><option value="1">세이블</option><option value="2">슈퍼 세이블</option></select></div>
-                        <div><label class="text-[10px] font-semibold text-slate-600 block mb-0.5">아잔틱 (열성)</label><select id="f-ax" class="w-full border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-pink-500 bg-white"><option value="0">없음</option><option value="1">100% 헷 아잔틱</option><option value="2">아잔틱 (발현)</option></select></div>
-                        <div><label class="text-[10px] font-semibold text-slate-600 block mb-0.5">초초/팬텀 (열성)</label><select id="f-cho" class="w-full border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-pink-500 bg-white"><option value="0">없음</option><option value="1">100% 헷 초초</option><option value="2">초초 (발현)</option></select></div>
-                    </div>
-                </div>
-                
-                <div class="flex gap-2 mt-4 pt-3 border-t border-slate-100">
-                    <button type="button" onclick="window.resetMorphCalc()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 rounded-lg transition text-xs border border-slate-200">초기화</button>
-                    <button type="button" onclick="window.runMorphCalculation()" class="w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg transition shadow-sm text-sm"><i class="fa-solid fa-calculator mr-1"></i> 확률 계산하기</button>
-                </div>
-            </div>
-
-            <div id="calc-result-area" class="hidden animate-fadeIn">
-                <h4 class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-chart-pie text-indigo-500"></i> 자손 모프 유전 확률</h4>
-                <div class="bg-white p-4 rounded-xl border border-indigo-200 shadow-sm">
-                    <div id="calc-result-list" class="space-y-0.5 text-[13px]"></div>
-                </div>
-                <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg mt-3">
-                    <p class="text-[10px] text-amber-700 leading-relaxed font-medium">※ 본 계산기는 독립의 법칙에 따른 멘델 유전 이론 확률입니다. <br>※ 66% 헷(가능성)은 계산에 포함되지 않으며, 실제 부화 결과는 확률적 편차가 존재할 수 있습니다.</p>
-                </div>
-            </div>
-            
         </div>
     </div>
 </div>
