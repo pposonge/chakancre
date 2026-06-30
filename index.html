@@ -150,8 +150,16 @@
                 <div class="overflow-x-auto hide-scroll">
                     <table class="w-full text-center text-xs min-w-[340px] table-fixed">
                         <colgroup>
-                            <col class="w-[130px]"> <col class="w-[60px]"> <col class="w-[70px]"> <col class="w-[40px]"> </colgroup>
-                        <thead><tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200"><th class="py-2.5 px-2 text-left">개체/날짜</th><th class="py-2.5 px-1 text-center">무게</th><th class="py-2.5 px-1 text-center">피딩/청소</th><th class="py-2.5 px-1 text-center">삭제</th></tr></thead>
+    <col class="w-[130px]"> <col class="w-[60px]"> <col class="w-[70px]"> <col class="w-[40px]">
+</colgroup>
+<thead>
+    <tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+        <th class="py-2.5 px-2 text-center bg-slate-100 sticky left-0 z-20 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)]">개체/날짜</th>
+        <th class="py-2.5 px-1 text-center">무게</th>
+        <th class="py-2.5 px-1 text-center">피딩/청소</th>
+        <th class="py-2.5 px-1 text-center">삭제</th>
+    </tr>
+</thead>
                         <tbody id="history-timeline-body" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
@@ -204,16 +212,24 @@
                     </div>
                     <div class="overflow-x-auto hide-scroll">
                         <table class="w-full text-left text-xs border-collapse min-w-[650px] table-fixed">
-                            <colgroup>
-                                <col class="w-[120px] md:w-[150px]">
-                                <col class="w-[90px]">
-                                <col class="w-[90px]">
-                                <col class="w-[80px]">
-                                <col class="w-[110px]">
-                                <col class="w-[70px]">
-                                <col class="w-[60px]">
-                            </colgroup>
-                            <thead><tr class="bg-slate-50/50 text-[11px] font-semibold text-slate-500 border-b border-slate-200"><th class="px-2 py-3 bg-slate-100 sticky left-0 z-20 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)]">매칭</th><th class="px-2 py-3 text-center">교배일</th><th class="px-2 py-3 text-center">산란일</th><th class="px-2 py-3 text-center">알/온도</th><th class="px-3 py-3 text-center">해칭 예정</th><th class="px-3 py-3 text-center">D-Day</th><th class="px-2 py-3 text-center">작업</th></tr></thead>
+   <colgroup>
+    <col class="w-[130px] md:w-[160px]">
+    <col class="w-[95px] md:w-[110px]">
+    <col class="w-[80px]">
+    <col class="w-[110px]">
+    <col class="w-[70px]">
+    <col class="w-[60px]">
+</colgroup>
+<thead>
+    <tr class="bg-slate-50/50 text-[11px] font-semibold text-slate-500 border-b border-slate-200">
+        <th class="px-2 py-3 bg-slate-100 sticky left-0 z-20 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)] text-center">매칭</th>
+        <th class="px-2 py-3 text-center">교배일<br><span class="text-[9px] font-normal text-slate-400">산란일</span></th>
+        <th class="px-2 py-3 text-center">알/온도</th>
+        <th class="px-3 py-3 text-center">해칭 예정</th>
+        <th class="px-3 py-3 text-center">D-Day</th>
+        <th class="px-2 py-3 text-center">작업</th>
+    </tr>
+</thead>
                             <tbody id="eggTableBody" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>

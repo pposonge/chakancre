@@ -37,7 +37,6 @@ window.updateBreedingDashboard=function(){const period=document.getElementById('
 window.filterBreedingTable=function(filterValue){const filterSelect=document.getElementById('eggFilter');if(filterSelect)filterSelect.value=filterValue;window.eggPage=1;window.renderBreedingTable();const msg=filterValue==='all'?'전체':(filterValue==='hatched'?'해칭완료':(filterValue==='incubating'?'부화중':'산란대기'));window.showToast(`${msg} 목록으로 정렬되었습니다.`);document.getElementById('eggTableBody').scrollIntoView({behavior:'smooth',block:'nearest'});};
 window.renderMatrixTable=function(){
     const allDates=[...new Set(window.appData.logs.map(l=>l.date))].sort((a,b)=>getSafeDate(a)-getSafeDate(b));
-    // 최근 날짜가 배열 앞쪽(왼쪽)에 오도록 reverse 처리
     let displayDates=allDates.slice(-5).reverse();
     while(displayDates.length<5)displayDates.push('');
     
@@ -46,13 +45,12 @@ window.renderMatrixTable=function(){
     if(window.matrixPage>totalPages)window.matrixPage=totalPages;
     const paginatedGeckos=window.appData.geckos.slice((window.matrixPage-1)*window.ITEMS_PER_PAGE,window.matrixPage*window.ITEMS_PER_PAGE);
     
-    // 개체명 부분 sticky 고정 추가 (최근 5회 관리 상태)
-    let h=`<thead><tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200"><th class="py-2.5 px-2 bg-slate-100 sticky left-0 z-20 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)] w-[90px] min-w-[90px]">개체명</th>`;
+    let h=`<thead><tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200"><th class="py-2.5 px-2 bg-slate-100 sticky left-0 z-20 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)] w-[90px] min-w-[90px] text-center">개체명</th>`;
     displayDates.forEach(d=>h+=`<th class="py-2.5 px-2 text-brand-700 bg-slate-100/50 whitespace-nowrap min-w-[70px]">${d?formatDisplayDate(d):'-'}</th>`);
     h+=`</tr></thead><tbody class="divide-y divide-slate-100">`;
     
     paginatedGeckos.forEach(g=>{
-        h+=`<tr><td class="py-3 px-2 font-bold text-slate-800 whitespace-nowrap bg-white sticky left-0 z-10 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)] w-[90px] min-w-[90px] text-left truncate max-w-[100px]">${g.name} <span class="text-[10px] text-slate-400">(${g.gender})</span></td>`;
+        h+=`<tr><td class="py-3 px-2 font-bold text-slate-800 whitespace-nowrap bg-white sticky left-0 z-10 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)] w-[90px] min-w-[90px] text-center truncate max-w-[100px]">${g.name} <div class="text-[10px] text-slate-400 font-normal mt-0.5">(${g.gender})</div></td>`;
         displayDates.forEach(d=>{
             if(!d){h+=`<td class="py-3 px-2 text-[10px] text-slate-300 min-w-[80px]">-</td>`;return;}
             const l=window.appData.logs.find(x=>x.geckoId===g.id&&x.date===d);
@@ -140,8 +138,8 @@ window.renderHistoryTimeline=function(){
         const gc=l.gender==='수'?'text-blue-500':(l.gender==='암'?'text-pink-500':'text-slate-400');
         const gi=l.gender==='수'?'♂':(l.gender==='암'?'♀':'?');
         h+=`<tr class="hover:bg-slate-50/80">
-            <td class="px-2 py-2 text-left truncate">
-                <div class="font-bold text-slate-800 text-[12px] truncate"><span class="${gc} mr-1">${gi}</span>${l.geckoName}</div>
+            <td class="px-2 py-2 text-center truncate bg-white sticky left-0 z-10 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)]">
+                <div class="font-bold text-slate-800 text-[12px] truncate flex justify-center items-center"><span class="${gc} mr-1">${gi}</span>${l.geckoName}</div>
                 <div class="text-[10px] text-slate-400 font-mono mt-0.5 truncate">${formatDisplayDate(l.date)}</div>
             </td>
             <td class="px-1 py-2 text-center font-bold text-brand-600 text-[12px] whitespace-nowrap">${w}</td>
@@ -226,19 +224,21 @@ window.renderBreedingTable=function(){
         const sc=egg.state==='hatched'?'bg-slate-100 text-slate-400':(egg.state==='waiting'?'bg-amber-50 text-amber-600':'bg-brand-50 text-brand-600 border-brand-200 border');
         const pulse=(egg.diff>=0&&egg.diff<=7)?'animate-pulse text-red-600 border-red-200 bg-red-50':sc;
         h+=`<tr class="hover:bg-slate-50/80 group">
-            <td class="px-2 py-3 font-semibold bg-white group-hover:bg-slate-50 sticky left-0 z-10 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)]">
-                <div class="text-[11px] md:text-xs flex items-center flex-wrap gap-x-1 leading-snug"><span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300">×</span> <span class="text-pink-500">♀</span>${egg.female} ${getClutchBadge(egg.clutch)}</div>
+            <td class="px-2 py-3 font-semibold bg-white group-hover:bg-slate-50 sticky left-0 z-10 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)] text-center">
+                <div class="text-[11px] md:text-xs flex items-center justify-center flex-wrap gap-x-1 leading-snug"><span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300">×</span> <span class="text-pink-500">♀</span>${egg.female} ${getClutchBadge(egg.clutch)}</div>
                 ${egg.memo?'<div class="text-[9px] text-slate-400 mt-1 truncate">'+egg.memo+'</div>':''}
             </td>
-            <td class="px-2 py-3 text-center text-slate-500 font-mono whitespace-nowrap">${formatDisplayDate(egg.mateDate)}</td>
-            <td class="px-2 py-3 text-center font-bold font-mono whitespace-nowrap ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</td>
+            <td class="px-2 py-3 text-center whitespace-nowrap">
+                <div class="text-[11px] text-slate-500 font-mono">${formatDisplayDate(egg.mateDate)}</div>
+                <div class="text-[11px] font-bold font-mono mt-0.5 ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</div>
+            </td>
             <td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td>
             <td class="px-3 py-3 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">${egg.exp}</td>
             <td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td>
             <td class="px-2 py-3 text-center space-x-2"><button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td>
         </tr>`;
     });
-    document.getElementById('eggTableBody').innerHTML=h||`<tr><td colspan="7" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
+    document.getElementById('eggTableBody').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
     window.renderPagination('egg-pagination',totalItems,totalPages,window.eggPage,'window.changeEggPage');
 };
 window.renderInfertileTable=function(){
