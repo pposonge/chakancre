@@ -229,8 +229,8 @@ window.renderBreedingTable=function(){
                 ${egg.memo?'<div class="text-[9px] text-slate-400 mt-1 truncate">'+egg.memo+'</div>':''}
             </td>
             <td class="px-2 py-3 text-center whitespace-nowrap">
-                <div class="text-[11px] font-bold font-mono ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</div>
-                <div class="text-[10px] text-indigo-600 font-semibold font-mono mt-0.5">${formatDisplayDate(egg.mateDate)}</div>
+                <div class="text-[11px] text-slate-500 font-mono">${formatDisplayDate(egg.mateDate)}</div>
+                <div class="text-[11px] font-bold font-mono mt-0.5 ${egg.layDate?'text-amber-600':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</div>
             </td>
             <td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td>
             <td class="px-3 py-3 text-center text-brand-600 font-bold font-mono text-[11px] whitespace-nowrap">${egg.exp}</td>
