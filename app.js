@@ -8,7 +8,7 @@ window.geckoPage=1;window.matrixPage=1;window.logFormPage=1;window.historyPage=1
 function normalizeDateStr(s){if(!s||typeof s!=='string')return s||'';let m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return s;if(/^\d{2}-\d{2}-\d{2}$/.test(s))return '20'+s;m=s.match(/^(\d{2})(\d{2})(\d{2})$/);if(m)return '20'+m[1]+'-'+m[2]+'-'+m[3];m=s.match(/^(\d{4})(\d{2})(\d{2})$/);if(m)return m[1]+'-'+m[2]+'-'+m[3];return s;}
 function getClutchBadge(clutch){if(!clutch||clutch==='?')return `<span class="inline-block ml-1 px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 border border-slate-200">산란전</span>`;const num=parseInt(clutch.toString().replace(/[^0-9]/g,''));if(isNaN(num))return `<span class="inline-block ml-1 px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-500 border border-slate-200">${clutch}</span>`;const styles={1:"bg-red-50 text-red-600 border-red-200",2:"bg-orange-50 text-orange-600 border-orange-200",3:"bg-amber-50 text-amber-600 border-amber-200",4:"bg-yellow-50 text-yellow-600 border-yellow-200",5:"bg-lime-50 text-lime-600 border-lime-200",6:"bg-green-50 text-green-600 border-green-200",7:"bg-emerald-50 text-emerald-600 border-emerald-200",8:"bg-teal-50 text-teal-600 border-teal-200",9:"bg-sky-50 text-sky-600 border-sky-200",10:"bg-blue-50 text-blue-600 border-blue-200",11:"bg-purple-50 text-purple-600 border-purple-200",12:"bg-pink-50 text-pink-600 border-pink-200"};const styleClass=styles[num]||"bg-slate-50 text-slate-600 border-slate-200";return `<span class="inline-block ml-1 px-1.5 py-0.5 text-[9px] font-bold rounded border ${styleClass}">${num}차</span>`;}
 function getSafeDate(s){if(!s)return null;if(typeof s==='number'){const d=new Date(s);return isNaN(d)?null:d;}if(typeof s!=='string')return null;let m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m){const d=new Date(+m[1],m[2]-1,+m[3]);return isNaN(d)?null:d;}const p=s.split('-');if(p.length!==3)return null;const y=p[0].length===2?2000+parseInt(p[0]):+p[0];const d=new Date(y,p[1]-1,+p[2]);return isNaN(d)?null:d;}
-function formatDisplayDate(s){if(!s||typeof s!=='string')return '-';const d=getSafeDate(s);if(!d)return s;const dn=['일','월','화','수','목','금','토'];return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} (${dn[d.getDay()]})`;}
+function formatDisplayDate(s){if(!s||typeof s!=='string')return '-';const d=getSafeDate(s);if(!d)return s;const dn=['일','월','화','수','목','금','토'];return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}(${dn[d.getDay()]})`;}
 function formatShortDate(s){if(!s)return '-';const d=getSafeDate(s);if(!d)return s;return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;}
 function getTodayFormatted(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function daysBetween(a,b){const x=getSafeDate(a),y=getSafeDate(b);return(x&&y)?Math.round((y-x)/864e5):null;}
@@ -181,14 +181,14 @@ window.renderBreedingTable=function(){
         femaleGroups[female].forEach(e=>{if(e.layDate)e.clutch=clutchCount++;else e.clutch='?';});
     });
     let processed=eggs.map(egg=>{
-        let state='waiting',dDay='대기중',exp='-',diff=9999;
+        let state='waiting', dDay='대기중', exp='-', diff=9999;
         if(egg.layDate){
             const l=getSafeDate(egg.layDate);
             if(l){
                 const days=Math.round(72-(parseFloat(egg.targetTemp)-24)*10);
                 const hd=new Date(l);hd.setDate(hd.getDate()+days);
                 const dn=['일','월','화','수','목','금','토'];
-                exp=`${hd.getFullYear()}-${String(hd.getMonth()+1).padStart(2,'0')}-${String(hd.getDate()).padStart(2,'0')} (${dn[hd.getDay()]})`;
+                exp=`${hd.getFullYear()}-${String(hd.getMonth()+1).padStart(2,'0')}-${String(hd.getDate()).padStart(2,'0')}(${dn[hd.getDay()]})`;
                 diff=Math.round((hd-today)/864e5);
                 state=diff<0?'hatched':'incubating';
                 dDay=diff<0?'해칭완료':(diff===0?'★D-Day':`D-${diff}`);
@@ -229,11 +229,11 @@ window.renderBreedingTable=function(){
                 ${egg.memo?'<div class="text-[9px] text-slate-400 mt-1 truncate">'+egg.memo+'</div>':''}
             </td>
             <td class="px-2 py-3 text-center whitespace-nowrap">
-                <div class="text-[11px] text-slate-500 font-mono">${formatDisplayDate(egg.mateDate)}</div>
-                <div class="text-[11px] font-bold font-mono mt-0.5 ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</div>
+                <div class="text-[11px] font-bold font-mono ${egg.layDate?'text-slate-700':'text-amber-500'}">${egg.layDate?formatDisplayDate(egg.layDate):'미산란'}</div>
+                <div class="text-[10px] text-indigo-600 font-semibold font-mono mt-0.5">${formatDisplayDate(egg.mateDate)}</div>
             </td>
             <td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td>
-            <td class="px-3 py-3 text-center text-slate-600 font-mono text-[11px] whitespace-nowrap">${egg.exp}</td>
+            <td class="px-3 py-3 text-center text-brand-600 font-bold font-mono text-[11px] whitespace-nowrap">${egg.exp}</td>
             <td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td>
             <td class="px-2 py-3 text-center space-x-2"><button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td>
         </tr>`;
@@ -261,7 +261,7 @@ window.renderInfertileTable=function(){
         const past=window.appData.infertileEggs.filter(e=>e.female===egg.female&&getSafeDate(e.layDate)<getSafeDate(egg.layDate)).sort((a,b)=>getSafeDate(b.layDate)-getSafeDate(a.layDate));
         let gap='-';
         if(past.length>0){const d=daysBetween(past[0].layDate,egg.layDate);if(d!==null)gap=`${d}일`;}
-        h+=`<tr class="hover:bg-slate-50/80 group"><td class="px-3 py-3 font-semibold text-slate-800 text-[11px] md:text-xs bg-white group-hover:bg-slate-50 sticky left-0 z-10 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)]"><span class="text-pink-500 mr-1">♀</span>${egg.female}</td><td class="px-2 py-3 text-center text-slate-700 font-bold font-mono whitespace-nowrap">${formatDisplayDate(egg.layDate)}</td><td class="px-2 py-3 text-center"><span class="font-bold text-slate-700">${egg.eggCount}</span>알</td><td class="px-2 py-3 text-center text-xs text-slate-500">${gap}</td><td class="px-2 py-3 text-center text-[10px] text-slate-400 truncate max-w-[100px]">${egg.memo||'-'}</td><td class="px-2 py-3 text-center space-x-2"><button onclick="window.editInfertileEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteInfertileEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
+        h+=`<tr class="hover:bg-slate-50/80 group"><td class="px-3 py-3 font-semibold text-slate-800 text-[11px] md:text-xs bg-white group-hover:bg-slate-50 sticky left-0 z-10 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)] text-center"><span class="text-pink-500 mr-1">♀</span>${egg.female}</td><td class="px-2 py-3 text-center text-slate-700 font-bold font-mono whitespace-nowrap">${formatDisplayDate(egg.layDate)}</td><td class="px-2 py-3 text-center"><span class="font-bold text-slate-700">${egg.eggCount}</span>알</td><td class="px-2 py-3 text-center text-xs text-slate-500">${gap}</td><td class="px-2 py-3 text-center text-[10px] text-slate-400 truncate max-w-[100px]">${egg.memo||'-'}</td><td class="px-2 py-3 text-center space-x-2"><button onclick="window.editInfertileEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteInfertileEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
     });
     document.getElementById('infertileTableBody').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
     window.renderPagination('infertile-pagination',totalItems,totalPages,window.infertilePage,'window.changeInfertilePage');
