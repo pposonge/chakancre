@@ -33,21 +33,26 @@ function initCalendars(){document.querySelectorAll('.cal-input').forEach(el=>{if
 window.renderPagination=function(containerId,totalItems,totalPages,currentPage,changeFnName){const container=document.getElementById(containerId);if(!container)return;if(totalItems===0){container.innerHTML='';return;}let html=`<div class="flex flex-col sm:flex-row items-center justify-between gap-3 w-full text-xs text-slate-500 px-1 py-2"><div>총 <span class="font-bold text-slate-700">${totalItems}</span>건 <span class="text-[10px] text-slate-400 font-normal ml-1">(${currentPage}/${totalPages} 페이지)</span></div>`;if(totalPages>1){html+=`<div class="flex items-center space-x-1"><button onclick="${changeFnName}(${currentPage-1})" class="px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-white transition shadow-sm" ${currentPage===1?'disabled':''}><i class="fa-solid fa-chevron-left"></i></button>`;let startPage=Math.max(1,currentPage-2);let endPage=Math.min(totalPages,currentPage+2);if(startPage>1){html+=`<button onclick="${changeFnName}(1)" class="px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm">1</button>`;if(startPage>2)html+=`<span class="px-1 text-slate-400">...</span>`;}for(let i=startPage;i<=endPage;i++){if(i===currentPage){html+=`<button class="px-2.5 py-1.5 rounded-md border border-brand-500 bg-brand-50 text-brand-700 font-bold shadow-sm">${i}</button>`;}else{html+=`<button onclick="${changeFnName}(${i})" class="px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm">${i}</button>`;}}if(endPage<totalPages){if(endPage<totalPages-1)html+=`<span class="px-1 text-slate-400">...</span>`;html+=`<button onclick="${changeFnName}(${totalPages})" class="px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm">${totalPages}</button>`;}html+=`<button onclick="${changeFnName}(${currentPage+1})" class="px-2.5 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-white transition shadow-sm" ${currentPage===totalPages?'disabled':''}><i class="fa-solid fa-chevron-right"></i></button></div>`;}html+=`</div>`;container.innerHTML=html;};
 window.scrollMainTo = function(el) {
     if (!el) return;
-    
     const absoluteTop = el.getBoundingClientRect().top + window.scrollY;
-    
     if (window.innerWidth >= 1024) {
-        // 웹(PC) 모드: 화면이 불필요하게 아래로 '내려가는' 현상 방지
         const targetY = absoluteTop - 100;
-        // 현재 화면이 요소보다 더 아래쪽을 보고 있을 때(즉 화면을 '올려야' 할 때)만 작동
         if (window.scrollY > targetY) {
             window.scrollTo({ top: targetY, behavior: 'smooth' });
         }
     } else {
-        // 모바일 모드: 상단 고정 헤더(약 150px)를 피해 제목과 우측 필터가 넉넉히 보이도록 오프셋 큰 폭 조정
-        const offset = absoluteTop - 180;
+        const offset = absoluteTop - 230;
         window.scrollTo({ top: offset, behavior: 'smooth' });
     }
+};
+
+window.changeEggPage=function(p){window.eggPage=p;window.renderBreedingTable();window.scrollMainTo(document.getElementById('egg-view-container').closest('.bg-white'));};
+
+window.filterBreedingTable=function(filterValue){
+    const filterSelect=document.getElementById('eggFilter');
+    if(filterSelect)filterSelect.value=filterValue;
+    window.eggPage=1;
+    window.renderBreedingTable();
+    window.scrollMainTo(document.getElementById('egg-view-container').closest('.bg-white'));
 };
 window.changeMatrixPage=function(p){window.matrixPage=p;window.renderMatrixTable();window.scrollMainTo(document.getElementById('matrix-table').closest('.bg-white'));};
 window.changeGeckoPage=function(p){window.geckoPage=p;window.renderGeckos();window.scrollMainTo(document.getElementById('tab-geckos'));};
@@ -111,15 +116,6 @@ window.renderMatrixTable=function(){
     document.getElementById('matrix-table').innerHTML=h;
     window.renderPagination('matrix-pagination',totalItems,totalPages,window.matrixPage,'window.changeMatrixPage');
 };
-function getSortedGeckos(wf){const sm=document.getElementById('gecko-sort').value;let sorted=[...window.appData.geckos];const go={'수':['수','암','미구분'],'암':['암','수','미구분'],'미구분':['미구분','수','암']};if(go[sm])sorted.sort((a,b)=>go[sm].indexOf(a.gender)-go[sm].indexOf(b.gender));else if(sm==='hatch-asc')sorted.sort((a,b)=>{const da=getSafeDate(a.hatchDate),db=getSafeDate(b.hatchDate);if(!da)return 1;if(!db)return -1;return da-db;});else if(sm==='hatch-desc')sorted.sort((a,b)=>{const da=getSafeDate(a.hatchDate),db=getSafeDate(b.hatchDate);if(!da)return 1;if(!db)return -1;return db-da;});else if(sm==='weight-desc')sorted.sort((a,b)=>{const wa=getLastWeight(a.id),wb=getLastWeight(b.id);if(wa===null)return 1;if(wb===null)return -1;return wb-wa;});else if(sm==='weight-asc')sorted.sort((a,b)=>{const wa=getLastWeight(a.id),wb=getLastWeight(b.id);if(wa===null)return 1;if(wb===null)return -1;return wa-wb;});if(wf)sorted=sorted.filter(g=>{const w=getLastWeight(g.id);if(w===null)return false;if(wf==='baby')return w<5;if(wf==='juv')return w>=5&&w<15;if(wf==='sub')return w>=15&&w<25;if(wf==='adult')return w>=25;return true;});return sorted;}
-window.setGeckoView=function(mode){viewMode=mode;const g=document.getElementById('view-grid-btn'),l=document.getElementById('view-list-btn'),c=document.getElementById('gecko-container');if(mode==='grid'){g.classList.replace('bg-white','bg-slate-100');l.classList.replace('bg-slate-100','bg-white');c.className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 transition-all';}else{l.classList.replace('bg-white','bg-slate-100');g.classList.replace('bg-slate-100','bg-white');c.className='flex flex-col gap-3 transition-all';}window.renderGeckos();};
-async function compressImage(file){return new Promise(r=>{const rd=new FileReader();rd.onload=function(e){const img=new Image();img.onload=function(){const c=document.createElement('canvas');const M=600;let w=img.width,h=img.height;if(w>M){h*=M/w;w=M;}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);r(c.toDataURL('image/jpeg',0.6));};img.src=e.target.result;};rd.readAsDataURL(file);});}
-async function handleImageUpload(e){const f=Array.from(e.target.files);if(pendingImages.length+f.length>5)return alert('최대 5장');for(let x of f)pendingImages.push(await compressImage(x));renderImagePreview();}
-function renderImagePreview(){const c=document.getElementById('image-preview-container');c.innerHTML='';pendingImages.forEach((s,i)=>{c.innerHTML+=`<div class="relative w-16 h-16 shrink-0"><img src="${s}" class="w-full h-full object-cover rounded-md border border-slate-200"><button type="button" onclick="window.removePendingImage(${i})" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center"><i class="fa-solid fa-x"></i></button></div>`;});}
-window.removePendingImage=function(i){pendingImages.splice(i,1);renderImagePreview();};
-window.openGeckoModal=function(id=null){editingGeckoId=id;pendingImages=[];let mH='<option value="">미상</option>',fH='<option value="">미상</option>';window.appData.geckos.forEach(g=>{if(g.id==id)return;if(g.gender==='수')mH+=`<option value="${g.id}">${g.name}</option>`;if(g.gender==='암')fH+=`<option value="${g.id}">${g.name}</option>`;});document.getElementById('reg-father').innerHTML=mH;document.getElementById('reg-mother').innerHTML=fH;if(id){const g=window.appData.geckos.find(x=>x.id==id);document.getElementById('modal-title').innerHTML='<i class="fa-solid fa-pen text-brand-600"></i> 개체 수정';document.getElementById('reg-name').value=g.name;document.getElementById('reg-gender').value=g.gender;document.getElementById('reg-hatch').value=g.hatchDate;document.getElementById('reg-morph').value=g.morph;pendingImages=g.images?[...g.images]:[];document.getElementById('btn-save-continue').classList.add('hidden');const lin=window.appData.lineage.find(l=>l.childId==id);if(lin){document.getElementById('reg-father').value=lin.fatherId||'';document.getElementById('reg-mother').value=lin.motherId||'';}}else{document.getElementById('modal-title').innerHTML='<i class="fa-solid fa-plus-circle text-brand-600"></i> 개체 등록';document.getElementById('reg-name').value='';document.getElementById('reg-hatch').value='';document.getElementById('reg-morph').value='';document.getElementById('reg-father').value='';document.getElementById('reg-mother').value='';document.getElementById('btn-save-continue').classList.remove('hidden');}document.getElementById('reg-images').value='';renderImagePreview();document.getElementById('geckoModal').classList.remove('hidden');setTimeout(initCalendars,50);};
-window.closeGeckoModal=function(){document.getElementById('geckoModal').classList.add('hidden');};
-window.saveGecko=function(keepOpen){const name=document.getElementById('reg-name').value.trim();if(!name)return alert('이름을 입력해주세요.');const data={name,gender:document.getElementById('reg-gender').value,hatchDate:normalizeDateStr(document.getElementById('reg-hatch').value),morph:document.getElementById('reg-morph').value,images:[...pendingImages]};let currentId=editingGeckoId;if(editingGeckoId){const i=window.appData.geckos.findIndex(g=>g.id==editingGeckoId);window.appData.geckos[i]={...window.appData.geckos[i],...data};window.showToast("수정 완료");}else{currentId=window.appData.geckos.length?Math.max(...window.appData.geckos.map(g=>g.id))+1:1;window.appData.geckos.push({id:currentId,...data});window.showToast("등록 완료");}const fId=document.getElementById('reg-father').value;const mId=document.getElementById('reg-mother').value;window.appData.lineage=window.appData.lineage.filter(l=>l.childId!=currentId);if(fId||mId){window.appData.lineage.push({childId:currentId,fatherId:fId?parseInt(fId):null,motherId:mId?parseInt(mId):null});}saveData();if(currentDetailGeckoId)window.openDetailModal(currentDetailGeckoId);if(keepOpen){document.getElementById('reg-name').value='';document.getElementById('reg-hatch').value='';document.getElementById('reg-images').value='';pendingImages=[];renderImagePreview();document.getElementById('reg-name').focus();}else window.closeGeckoModal();};
 window.renderGeckos=function(wf){
     let sorted=getSortedGeckos(wf);
     const totalItems=sorted.length;
@@ -129,7 +125,7 @@ window.renderGeckos=function(wf){
     
     let html='';
     paginatedData.forEach(g=>{
-        const w=getLastWeight(g.id),ws=w!==null?w+'g':'기록없음',care=getLastCareSummary(g.id),cd=care.date?formatShortDate(care.date):'-',age=getAge(g.hatchDate);
+        const w=getLastWeight(g.id);
         const thumb=(g.images&&g.images.length)?g.images[0]:null;
         const thHtml=thumb?`<img src="${thumb}" class="object-cover w-full h-full">`:`<div class="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300 text-3xl"><i class="fa-solid fa-lizard"></i></div>`;
         const gc=g.gender==='수'?'text-blue-500':(g.gender==='암'?'text-pink-500':'text-slate-400'),gi=g.gender==='수'?'♂':(g.gender==='암'?'♀':'?');
@@ -139,17 +135,47 @@ window.renderGeckos=function(wf){
         const linInfo=(father||mother)?`<div class="text-[9px] text-purple-500 mt-0.5"><i class="fa-solid fa-sitemap mr-0.5"></i>${father?'♂'+father.name:''}${(father&&mother)?' × ':''}${mother?'♀'+mother.name:''}</div>`:'';
         const childrenCount=window.appData.lineage.filter(l=>l.fatherId==g.id||l.motherId==g.id).length;
         
-        let breedInfo=`<span class="text-[10px] text-slate-400 block mb-0.5">성장/상태</span>`;
-        if(childrenCount>0)breedInfo+=`<span class="px-1.5 py-0.5 bg-brand-50 text-brand-700 text-[10px] font-bold rounded">자녀 ${childrenCount}마리</span>`;
-        else if(w>=25)breedInfo+=`<span class="px-1.5 py-0.5 bg-slate-100 text-emerald-600 text-[10px] font-bold rounded">성체</span>`;
-        else if(w>=15)breedInfo+=`<span class="px-1.5 py-0.5 bg-slate-100 text-blue-500 text-[10px] font-bold rounded">준성체</span>`;
-        else if(w>=5)breedInfo+=`<span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded">아성체</span>`;
-        else breedInfo+=`<span class="px-1.5 py-0.5 bg-slate-100 text-slate-400 text-[10px] font-bold rounded">베이비</span>`;
+        let breedInfo='';
+        if(childrenCount>0)breedInfo+=`<span class="px-2 py-0.5 bg-brand-50 text-brand-700 text-[10px] font-bold rounded">자녀 ${childrenCount}마리</span>`;
+        else if(w!==null){
+            if(w>=25)breedInfo+=`<span class="px-2 py-0.5 bg-slate-100 text-emerald-600 text-[10px] font-bold rounded">성체</span>`;
+            else if(w>=15)breedInfo+=`<span class="px-2 py-0.5 bg-slate-100 text-blue-500 text-[10px] font-bold rounded">준성체</span>`;
+            else if(w>=5)breedInfo+=`<span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded">아성체</span>`;
+            else breedInfo+=`<span class="px-2 py-0.5 bg-slate-100 text-slate-400 text-[10px] font-bold rounded">베이비</span>`;
+        }
         
         if(viewMode==='grid'){
-            html+=`<div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden hover:shadow-md transition cursor-pointer group" onclick="window.openDetailModal(${g.id})"><div class="h-32 w-full bg-slate-50 relative border-b border-slate-100">${thHtml}<span class="absolute top-2 right-2 px-2 py-0.5 bg-white/90 backdrop-blur ${gc} text-[10px] font-bold rounded-md shadow-sm">${gi} ${g.gender}</span></div><div class="p-3 flex flex-col justify-between flex-1"><div><h3 class="text-base font-bold text-slate-800 group-hover:text-brand-600 transition">${g.name}</h3><p class="text-[11px] text-slate-500 mt-0.5"><span class="font-semibold">모프:</span> ${g.morph||'-'}${age?' · <span class="text-slate-400">'+age+'</span>':''}</p>${linInfo}</div><div class="mt-2 pt-2 border-t border-slate-100 space-y-1"><div class="flex justify-between items-center"><span class="text-xs font-bold text-brand-600"><i class="fa-solid fa-scale-balanced mr-1"></i>${ws}</span><span class="text-[10px] text-slate-400"><i class="fa-regular fa-calendar mr-0.5"></i>${cd}</span></div>${care.html?'<div class="text-[10px] font-bold truncate mt-0.5">'+care.html+'</div>':''}</div><div class="mt-2 flex justify-end"><button type="button" onclick="event.stopPropagation();window.deleteGecko(${g.id})" class="text-slate-300 hover:text-red-500 transition text-xs"><i class="fa-solid fa-trash-can"></i></button></div></div></div>`;
+            html+=`<div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden hover:shadow-md transition cursor-pointer group" onclick="window.openDetailModal(${g.id})">
+                <div class="h-32 w-full bg-slate-50 relative border-b border-slate-100">
+                    ${thHtml}
+                    <span class="absolute top-2 right-2 px-2 py-0.5 bg-white/90 backdrop-blur ${gc} text-[10px] font-bold rounded-md shadow-sm">${gi} ${g.gender}</span>
+                </div>
+                <div class="p-4 flex flex-col justify-center items-center flex-1 text-center">
+                    <h3 class="text-base font-bold text-slate-800 group-hover:text-brand-600 transition">${g.name}</h3>
+                    <p class="text-[11px] text-slate-500 mt-1"><span class="font-semibold text-slate-400">모프:</span> <span class="text-slate-600">${g.morph||'-'}</span></p>
+                    ${linInfo ? `<div class="mt-1.5">${linInfo}</div>` : ''}
+                    ${breedInfo ? `<div class="mt-2.5 flex justify-center w-full">${breedInfo}</div>` : ''}
+                    <div class="mt-3.5 w-full flex justify-center border-t border-slate-100 pt-3">
+                        <button type="button" onclick="event.stopPropagation();window.deleteGecko(${g.id})" class="text-slate-300 hover:text-red-500 transition text-xs flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> 삭제</button>
+                    </div>
+                </div>
+            </div>`;
         }else{
-            html+=`<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex items-center gap-4 hover:shadow-md transition cursor-pointer group" onclick="window.openDetailModal(${g.id})"><div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-slate-100">${thHtml}</div><div class="flex-1 grid grid-cols-2 md:grid-cols-5 gap-2 items-center"><div><div class="flex items-center gap-1.5"><h3 class="text-sm font-bold text-slate-800 group-hover:text-brand-600">${g.name}</h3><span class="px-1 py-0.5 bg-slate-100 ${gc} text-[9px] font-bold rounded">${gi}</span></div><p class="text-[10px] text-slate-400 mt-0.5">${g.morph||'-'}</p>${linInfo}</div><div class="text-xs text-slate-500"><span class="text-[10px] text-slate-400 block">해칭일</span>${g.hatchDate?formatDisplayDate(g.hatchDate):'-'}${age?' <span class="text-[9px] text-slate-400">('+age+')</span>':''}</div><div class="text-xs">${breedInfo}</div><div class="text-xs font-bold text-brand-600"><span class="text-[10px] text-slate-400 block font-normal">최근 무게</span>${ws}</div><div class="text-xs text-slate-500"><span class="text-[10px] text-slate-400 block">최근 관리</span>${cd}${care.html?' <div class="text-[10px] font-bold mt-0.5">'+care.html+'</div>':''}</div></div><div class="shrink-0 flex gap-3 px-2"><button type="button" onclick="event.stopPropagation();window.openGeckoModal(${g.id})" class="text-slate-400 hover:text-blue-500 transition"><i class="fa-solid fa-pen"></i></button><button type="button" onclick="event.stopPropagation();window.deleteGecko(${g.id})" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button></div></div>`;
+            html+=`<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex items-center gap-4 hover:shadow-md transition cursor-pointer group" onclick="window.openDetailModal(${g.id})">
+                <div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 border border-slate-100">${thHtml}</div>
+                <div class="flex-1 grid grid-cols-2 gap-4 items-center">
+                    <div class="flex flex-col justify-center">
+                        <div class="flex items-center gap-1.5"><h3 class="text-sm font-bold text-slate-800 group-hover:text-brand-600">${g.name}</h3><span class="px-1 py-0.5 bg-slate-100 ${gc} text-[9px] font-bold rounded">${gi}</span></div>
+                        <p class="text-[10px] text-slate-400 mt-0.5"><span class="font-semibold">모프:</span> ${g.morph||'-'}</p>
+                        ${linInfo}
+                    </div>
+                    <div class="flex justify-end items-center md:justify-center">${breedInfo}</div>
+                </div>
+                <div class="shrink-0 flex gap-3 px-2">
+                    <button type="button" onclick="event.stopPropagation();window.openGeckoModal(${g.id})" class="text-slate-400 hover:text-blue-500 transition"><i class="fa-solid fa-pen"></i></button>
+                    <button type="button" onclick="event.stopPropagation();window.deleteGecko(${g.id})" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+            </div>`;
         }
     });
     document.getElementById('gecko-container').innerHTML=html||`<div class="col-span-full py-10 text-center text-slate-400 text-sm">등록된 개체가 없습니다.</div>`;
@@ -167,7 +193,6 @@ window.openDetailModal=function(id){
     document.getElementById('detail-weight').innerText=w!==null?w+'g':'기록 없음';
     document.getElementById('detail-last-care').innerText=care.date?formatDisplayDate(care.date):'-';
     
-    // 추가된 상태 표시 영역
     const careEl=document.getElementById('detail-care-status');
     if(careEl)careEl.innerHTML=care.html||'<span class="text-slate-300">-</span>';
     
@@ -216,7 +241,6 @@ window.renderLogInputForm=function(){
     let sorted=getSortedGeckos();
     const totalItems=sorted.length;
     
-    // 좌측 폼은 입력칸 높이가 크므로 우측(20줄)과 길이를 완벽하게 맞추기 위해 10개로 제한
     const LOCAL_ITEMS_PER_PAGE=10; 
     const totalPages=Math.ceil(totalItems/LOCAL_ITEMS_PER_PAGE)||1;
     
@@ -273,7 +297,7 @@ window.renderHistoryTimeline=function(){
         const gc=l.gender==='수'?'text-blue-500':(l.gender==='암'?'text-pink-500':'text-slate-400');
         const gi=l.gender==='수'?'♂':(l.gender==='암'?'♀':'?');
         h+=`<tr class="hover:bg-slate-50/80">
-            <td class="px-2 py-2 text-center truncate bg-white sticky left-0 z-10 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)]">
+            <td class="px-2 py-2 text-center truncate bg-white sticky left-0 z-10 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)] lg:shadow-none lg:border-r lg:border-slate-100">
                 <div class="font-bold text-slate-800 text-[12px] truncate flex justify-center items-center"><span class="${gc} mr-1">${gi}</span>${l.geckoName}</div>
                 <div class="text-[10px] text-slate-400 font-mono mt-0.5 truncate">${formatDisplayDate(l.date)}</div>
             </td>
@@ -396,7 +420,12 @@ window.renderInfertileTable=function(){
         const past=window.appData.infertileEggs.filter(e=>e.female===egg.female&&getSafeDate(e.layDate)<getSafeDate(egg.layDate)).sort((a,b)=>getSafeDate(b.layDate)-getSafeDate(a.layDate));
         let gap='-';
         if(past.length>0){const d=daysBetween(past[0].layDate,egg.layDate);if(d!==null)gap=`${d}일`;}
-        h+=`<tr class="hover:bg-slate-50/80 group"><td class="px-3 py-3 font-semibold text-slate-800 text-[11px] md:text-xs bg-white group-hover:bg-slate-50 sticky left-0 z-10 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)] text-center"><span class="text-pink-500 mr-1">♀</span>${egg.female}</td><td class="px-2 py-3 text-center text-slate-700 font-bold font-mono whitespace-nowrap">${formatDisplayDate(egg.layDate)}</td><td class="px-2 py-3 text-center"><span class="font-bold text-slate-700">${egg.eggCount}</span>알</td><td class="px-2 py-3 text-center text-xs text-slate-500">${gap}</td><td class="px-2 py-3 text-center text-[10px] text-slate-400 truncate max-w-[100px]">${egg.memo||'-'}</td><td class="px-2 py-3 text-center space-x-2"><button onclick="window.editInfertileEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteInfertileEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
+        h+=`<tr class="hover:bg-slate-50/80 group">
+		<td class="px-3 py-3 font-semibold text-slate-800 text-[11px] md:text-xs bg-white group-hover:bg-slate-50 sticky left-0 z-10 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)] lg:shadow-none lg:border-r lg:border-slate-100 text-center">
+		<span class="text-pink-500 mr-1">♀</span>${egg.female}</td>
+		<td class="px-2 py-3 text-center text-slate-700 font-bold font-mono whitespace-nowrap">${formatDisplayDate(egg.layDate)}</td><td class="px-2 py-3 text-center"><span class="font-bold text-slate-700">${egg.eggCount}</span>알</td>
+		<td class="px-2 py-3 text-center text-xs text-slate-500">${gap}</td><td class="px-2 py-3 text-center text-[10px] text-slate-400 truncate max-w-[100px]">${egg.memo||'-'}</td>
+		<td class="px-2 py-3 text-center space-x-2"><button onclick="window.editInfertileEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteInfertileEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
     });
     document.getElementById('infertileTableBody').innerHTML=h||`<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
     window.renderPagination('infertile-pagination',totalItems,totalPages,window.infertilePage,'window.changeInfertilePage');
@@ -416,3 +445,224 @@ window.saveAndStartSync=function(){const code=document.getElementById('syncCodeI
 window.disconnectSync=function(){if(confirm("클라우드 동기화를 해제하시겠습니까?\n(로컬 데이터는 그대로 유지됩니다)")){localStorage.removeItem('gecko_sync_code');localStorage.removeItem('gecko_firebase_config');window.location.reload();}};
 window.exportDataToJson=function(){try{const s="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(window.appData,null,2)),a=document.createElement('a');a.setAttribute("href",s);a.setAttribute("download",`gecko_backup_${getTodayFormatted()}.json`);document.body.appendChild(a);a.click();a.remove();window.showToast("백업 다운로드 완료");}catch(e){window.showToast("백업 실패");}};
 window.importDataFromJson=function(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{let s=e.target.result.trim();if(s.charCodeAt(0)===0xFEFF)s=s.slice(1);const im=JSON.parse(s);if(!im.geckos&&!im.eggs&&!im.logs)throw new Error("유효한 데이터가 없습니다.");if(confirm("데이터를 가져오시겠습니까?")){const d={geckos:[],logs:[],eggs:[],infertileEggs:[],lineage:[]};if(im.geckos)d.geckos=im.geckos.map(g=>{const p={...g};if(p.hatchDate)p.hatchDate=normalizeDateStr(p.hatchDate);return p;});if(im.logs)d.logs=im.logs.map(l=>{const p={...l};if(p.date)p.date=normalizeDateStr(p.date);return p;});if(im.eggs)d.eggs=im.eggs.map(egg=>{const p={...egg};if(p.layDate)p.layDate=normalizeDateStr(p.layDate);if(p.mateDate)p.mateDate=normalizeDateStr(p.mateDate);delete p.syncCode;delete p.date;delete p.createdAt;return p;});if(im.infertileEggs)d.infertileEggs=im.infertileEggs.map(e=>{const p={...e};if(p.layDate)p.layDate=normalizeDateStr(p.layDate);return p;});if(im.lineage)d.lineage=im.lineage;window.appData=d;saveData();window.showToast(`복구 완료! (${d.geckos.length}개체, ${d.eggs.length}산란)`);}}catch(err){console.error(err);window.showToast("파일 오류: "+err.message);}event.target.value='';};reader.readAsText(file);};
+let eggViewMode = 'list';
+window.setEggView = function(mode) {
+    eggViewMode = mode;
+    const gl = document.getElementById('egg-view-list-btn');
+    const gg = document.getElementById('egg-view-grid-btn');
+    if (mode === 'grid') {
+        gg.classList.replace('bg-white', 'bg-slate-100');
+        gg.classList.replace('text-slate-400', 'text-brand-600');
+        gl.classList.replace('bg-slate-100', 'bg-white');
+        gl.classList.replace('text-brand-600', 'text-slate-400');
+    } else {
+        gl.classList.replace('bg-white', 'bg-slate-100');
+        gl.classList.replace('text-slate-400', 'text-brand-600');
+        gg.classList.replace('bg-slate-100', 'bg-white');
+        gg.classList.replace('text-brand-600', 'text-slate-400');
+    }
+    window.renderBreedingTable();
+};
+
+window.renderBreedingTable = function() {
+    const filter=document.getElementById('eggFilter').value;
+    const sortM=document.getElementById('eggSort').value;
+    let eggs=[...window.appData.eggs];
+    const today=new Date();today.setHours(0,0,0,0);
+    const femaleGroups={};
+    eggs.forEach(e=>{if(!femaleGroups[e.female])femaleGroups[e.female]=[];femaleGroups[e.female].push(e);});
+    Object.keys(femaleGroups).forEach(female=>{
+        femaleGroups[female].sort((a,b)=>getSafeDate(a.layDate||a.mateDate)-getSafeDate(b.layDate||b.mateDate));
+        let clutchCount=1;
+        femaleGroups[female].forEach(e=>{if(e.layDate)e.clutch=clutchCount++;else e.clutch='?';});
+    });
+    let processed=eggs.map(egg=>{
+        let state='waiting', dDay='대기중', exp='-', diff=9999;
+        if(egg.layDate){
+            const l=getSafeDate(egg.layDate);
+            if(l){
+                const days=Math.round(72-(parseFloat(egg.targetTemp)-24)*10);
+                const hd=new Date(l);hd.setDate(hd.getDate()+days);
+                const dn=['일','월','화','수','목','금','토'];
+                exp=`${hd.getFullYear()}-${String(hd.getMonth()+1).padStart(2,'0')}-${String(hd.getDate()).padStart(2,'0')}(${dn[hd.getDay()]})`;
+                diff=Math.round((hd-today)/864e5);
+                state=diff<0?'hatched':'incubating';
+                dDay=diff<0?'해칭완료':(diff===0?'★D-Day':`D-${diff}`);
+            }
+        }
+        return {...egg,state,dDay,exp,diff};
+    });
+    
+    if(filter!=='all')processed=processed.filter(e=>e.state===filter);
+    processed.sort((a,b)=>{
+        if(sortM==='layDateDesc')return getSafeDate(b.layDate||b.mateDate)-getSafeDate(a.layDate||a.mateDate);
+        if(sortM==='created')return b.id-a.id;
+        if(sortM==='maleSort'){
+            const comp=(a.male||'').localeCompare(b.male||'');
+            return comp!==0?comp:getSafeDate(b.layDate||b.mateDate)-getSafeDate(a.layDate||a.mateDate);
+        }
+        if(sortM==='femaleSort'){
+            const comp=(a.female||'').localeCompare(b.female||'');
+            return comp!==0?comp:getSafeDate(b.layDate||b.mateDate)-getSafeDate(a.layDate||a.mateDate);
+        }
+        if(sortM==='mateDate')return getSafeDate(b.mateDate)-getSafeDate(a.mateDate);
+        if(sortM==='dday')return a.diff-b.diff;
+        return 0;
+    });
+    
+    const totalItems=processed.length;
+    const totalPages=Math.ceil(totalItems/window.ITEMS_PER_PAGE)||1;
+    if(window.eggPage>totalPages)window.eggPage=totalPages;
+    const paginatedData=processed.slice((window.eggPage-1)*window.ITEMS_PER_PAGE,window.eggPage*window.ITEMS_PER_PAGE);
+    
+    let container = document.getElementById('egg-view-container');
+    if (!container) return;
+    
+    let h = '';
+    if (eggViewMode === 'list') {
+        h += `<div class="overflow-x-auto hide-scroll">
+            <table class="w-full text-left text-xs border-collapse min-w-[650px] table-fixed">
+                <colgroup>
+                    <col class="w-[130px] md:w-[160px]"><col class="w-[95px] md:w-[110px]"><col class="w-[80px]"><col class="w-[110px]"><col class="w-[70px]"><col class="w-[60px]">
+                </colgroup>
+                <thead>
+                    <tr class="bg-slate-50/50 text-[11px] font-semibold text-slate-500 border-b border-slate-200">
+                        <th class="px-2 py-3 bg-slate-100 sticky left-0 z-20 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)] lg:shadow-none lg:border-r lg:border-slate-200 text-center">매칭</th>
+                        <th class="px-2 py-3 text-center">교배일<br><span class="text-[11px] font-bold text-amber-600">산란일</span></th>
+                        <th class="px-2 py-3 text-center">알/온도</th>
+                        <th class="px-3 py-3 text-center">해칭 예정</th>
+                        <th class="px-3 py-3 text-center">D-Day</th>
+                        <th class="px-2 py-3 text-center">작업</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">`;
+        if (paginatedData.length === 0) h += `<tr><td colspan="6" class="text-center py-6 text-slate-400 text-xs">기록 없음</td></tr>`;
+        else {
+            paginatedData.forEach(egg => {
+                const sc = egg.state === 'hatched' ? 'bg-slate-100 text-slate-400' : (egg.state === 'waiting' ? 'bg-amber-50 text-amber-600' : 'bg-brand-50 text-brand-600 border-brand-200 border');
+                const pulse = (egg.diff >= 0 && egg.diff <= 7) ? 'animate-pulse text-red-600 border-red-200 bg-red-50' : sc;
+                h += `<tr class="hover:bg-slate-50/80 group">
+                    <td class="px-2 py-3 font-semibold bg-white group-hover:bg-slate-50 sticky left-0 z-10 shadow-[2px_0_4px_-1px_rgba(0,0,0,0.1)] lg:shadow-none lg:border-r lg:border-slate-100 text-center cursor-pointer" onclick="window.openEggDetailModal(${egg.id})">
+                        <div class="text-[11px] md:text-xs flex items-center justify-center flex-wrap gap-x-1 leading-snug"><span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300">×</span> <span class="text-pink-500">♀</span>${egg.female} ${getClutchBadge(egg.clutch)}</div>
+                        ${egg.memo ? '<div class="text-[9px] text-slate-400 mt-1 truncate">' + egg.memo + '</div>' : ''}
+                    </td>
+                    <td class="px-2 py-3 text-center whitespace-nowrap">
+                        <div class="text-[11px] text-slate-500 font-mono">${formatDisplayDate(egg.mateDate)}</div>
+                        <div class="text-[11px] font-bold font-mono mt-0.5 ${egg.layDate ? 'text-amber-600' : 'text-amber-500'}">${egg.layDate ? formatDisplayDate(egg.layDate) : '미산란'}</div>
+                    </td>
+                    <td class="px-2 py-3 text-center"><span class="font-bold">${egg.eggCount}</span>알 / <span class="text-[10px] bg-slate-100 px-1 rounded text-slate-600">${egg.targetTemp}°C</span></td>
+                    <td class="px-3 py-3 text-center text-brand-600 font-bold font-mono text-[11px] whitespace-nowrap">${egg.exp}</td>
+                    <td class="px-3 py-3 text-center"><span class="px-2 py-1 text-[10px] font-bold rounded-full whitespace-nowrap ${pulse}">${egg.dDay}</span></td>
+                    <td class="px-2 py-3 text-center space-x-2"><button onclick="window.editEgg(${egg.id})" class="text-brand-600 hover:text-brand-800"><i class="fa-solid fa-pen"></i></button><button onclick="window.deleteEgg(${egg.id})" class="text-slate-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td>
+                </tr>`;
+            });
+        }
+        h += `</tbody></table></div>`;
+    } else {
+        h += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">`;
+        if (paginatedData.length === 0) h += `<div class="col-span-full py-6 text-center text-slate-400 text-xs">기록 없음</div>`;
+        else {
+            paginatedData.forEach(egg => {
+                const sc = egg.state === 'hatched' ? 'bg-slate-100 text-slate-500' : (egg.state === 'waiting' ? 'bg-amber-100 text-amber-700' : 'bg-brand-100 text-brand-700');
+                const borderCls = egg.state === 'hatched' ? 'border-slate-200' : (egg.state === 'waiting' ? 'border-amber-200' : 'border-brand-200');
+                const pulse = (egg.diff >= 0 && egg.diff <= 7) ? 'animate-pulse text-red-600 bg-red-100' : sc;
+                
+                h += `<div class="bg-white border ${borderCls} rounded-2xl shadow-sm hover:shadow-md transition cursor-pointer flex flex-col overflow-hidden relative" onclick="window.openEggDetailModal(${egg.id})">
+                    <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${pulse}">${egg.dDay}</span>
+                        ${getClutchBadge(egg.clutch)}
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-center items-center text-center">
+                        <div class="text-sm font-bold text-slate-800 flex items-center justify-center flex-wrap gap-x-1.5 mb-2">
+                            <span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300 mx-1">×</span> <span class="text-pink-500">♀</span>${egg.female}
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-2 w-full text-[11px] mt-2">
+                            <div class="bg-slate-50 p-2 rounded-lg text-center">
+                                <span class="block text-slate-400 mb-0.5">교배일</span>
+                                <span class="font-mono font-semibold text-slate-600">${formatShortDate(egg.mateDate)}</span>
+                            </div>
+                            <div class="bg-amber-50 p-2 rounded-lg text-center">
+                                <span class="block text-amber-500 mb-0.5">산란일</span>
+                                <span class="font-mono font-bold text-amber-700">${egg.layDate ? formatShortDate(egg.layDate) : '미산란'}</span>
+                            </div>
+                        </div>
+                        <div class="text-[11px] text-slate-500 mt-3 flex justify-center items-center gap-2">
+                            <span class="bg-slate-100 px-2 py-0.5 rounded-md font-bold">${egg.eggCount}알</span>
+                            <span class="text-slate-300">|</span>
+                            <span>${egg.targetTemp}°C</span>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
+        h += `</div>`;
+    }
+    container.innerHTML = h;
+    window.renderPagination('egg-pagination', totalItems, totalPages, window.eggPage, 'window.changeEggPage');
+};
+
+let currentDetailEggId = null;
+window.openEggDetailModal = function(id) {
+    currentDetailEggId = id;
+    const egg = window.appData.eggs.find(e => e.id == id);
+    if(!egg) return;
+    
+    let state='waiting', dDay='대기중', exp='-', diff=9999;
+    const today=new Date();today.setHours(0,0,0,0);
+    if(egg.layDate){
+        const l=getSafeDate(egg.layDate);
+        if(l){
+            const days=Math.round(72-(parseFloat(egg.targetTemp)-24)*10);
+            const hd=new Date(l);hd.setDate(hd.getDate()+days);
+            const dn=['일','월','화','수','목','금','토'];
+            exp=`${hd.getFullYear()}-${String(hd.getMonth()+1).padStart(2,'0')}-${String(hd.getDate()).padStart(2,'0')}(${dn[hd.getDay()]})`;
+            diff=Math.round((hd-today)/864e5);
+            state=diff<0?'hatched':'incubating';
+            dDay=diff<0?'해칭완료':(diff===0?'★D-Day':`D-${diff}`);
+        }
+    }
+    
+    let eggs=[...window.appData.eggs];
+    const femaleEggs = eggs.filter(e => e.female === egg.female).sort((a,b)=>getSafeDate(a.layDate||a.mateDate)-getSafeDate(b.layDate||b.mateDate));
+    let clutch = '?';
+    let clutchCount = 1;
+    femaleEggs.forEach(e => {
+        if(e.layDate) {
+            if(e.id === egg.id) clutch = clutchCount;
+            clutchCount++;
+        }
+    });
+    
+    document.getElementById('egg-detail-badge').innerHTML = `<span class="px-2 py-1 text-[10px] font-bold rounded-full ${egg.diff>=0&&egg.diff<=7?'bg-red-100 text-red-600 animate-pulse':(state==='hatched'?'bg-slate-100 text-slate-500':(state==='waiting'?'bg-amber-100 text-amber-700':'bg-brand-100 text-brand-700'))}">${dDay}</span>`;
+    document.getElementById('egg-detail-matching').innerHTML = `<span class="text-blue-500">♂</span>${egg.male} <span class="text-slate-300">×</span> <span class="text-pink-500">♀</span>${egg.female}`;
+    document.getElementById('egg-detail-clutch').innerHTML = getClutchBadge(clutch);
+    document.getElementById('egg-detail-count-temp').innerText = `${egg.eggCount}알 / ${egg.targetTemp}°C`;
+    document.getElementById('egg-detail-mateDate').innerText = formatDisplayDate(egg.mateDate);
+    document.getElementById('egg-detail-layDate').innerText = egg.layDate ? formatDisplayDate(egg.layDate) : '미산란';
+    document.getElementById('egg-detail-exp').innerText = exp;
+    document.getElementById('egg-detail-dday').innerText = dDay;
+    document.getElementById('egg-detail-memo').innerText = egg.memo || '메모 없음';
+    
+    document.getElementById('eggDetailModal').classList.remove('hidden');
+};
+
+window.closeEggDetailModal = function() {
+    currentDetailEggId = null;
+    document.getElementById('eggDetailModal').classList.add('hidden');
+};
+
+window.editEggFromDetail = function() {
+    if(currentDetailEggId) {
+        const id = currentDetailEggId;
+        window.closeEggDetailModal();
+        window.editEgg(id);
+    }
+};
+
+window.deleteEggFromDetail = function() {
+    if(currentDetailEggId) {
+        const id = currentDetailEggId;
+        window.closeEggDetailModal();
+        window.deleteEgg(id);
+    }
+};
