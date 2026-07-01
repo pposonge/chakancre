@@ -315,7 +315,12 @@
     <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh]">
         <button type="button" onclick="window.closeDetailModal()" class="absolute top-3 right-3 w-8 h-8 bg-slate-800/50 hover:bg-slate-800/80 backdrop-blur text-white rounded-full flex items-center justify-center text-lg z-20 shadow-sm transition"><i class="fa-solid fa-xmark"></i></button>
         <div id="detail-image-gallery" class="image-gallery bg-slate-100 p-4 shrink-0"></div>
-        <div class="p-6 overflow-y-auto hide-scroll flex-1">
+        <div class="grid grid-cols-2 gap-y-3 gap-x-4 border-t border-slate-100 pt-4 mt-2">
+    <div><span class="block text-[11px] font-bold text-slate-400">해칭일</span><span id="detail-hatch" class="text-sm font-semibold text-slate-700 block mt-0.5"></span></div>
+    <div><span class="block text-[11px] font-bold text-slate-400">최근 무게</span><span id="detail-weight" class="text-sm font-semibold text-brand-600 block mt-0.5"></span></div>
+    <div><span class="block text-[11px] font-bold text-slate-400">최근 관리일</span><span id="detail-last-care" class="text-sm font-semibold text-slate-700 block mt-0.5"></span></div>
+    <div><span class="block text-[11px] font-bold text-slate-400">피딩/청소</span><div id="detail-care-status" class="text-sm font-bold block mt-0.5 min-h-[20px]"></div></div>
+</div>
             <div class="flex justify-between items-start mb-4"><div><h3 id="detail-name" class="text-2xl font-bold text-slate-900"></h3><p id="detail-morph" class="text-sm text-slate-500 mt-1"></p></div><span id="detail-gender" class="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-lg border border-slate-200"></span></div>
             <div class="grid grid-cols-3 gap-3 border-t border-slate-100 pt-4 mt-2"><div><span class="block text-[11px] font-bold text-slate-400">해칭일</span><span id="detail-hatch" class="text-sm font-semibold text-slate-700"></span></div><div><span class="block text-[11px] font-bold text-slate-400">최근 무게</span><span id="detail-weight" class="text-sm font-semibold text-brand-600"></span></div><div><span class="block text-[11px] font-bold text-slate-400">최근 관리일</span><span id="detail-last-care" class="text-sm font-semibold text-slate-700"></span></div></div>
             <div id="detail-lineage-info" class="mt-3 p-2 bg-slate-50 rounded-lg text-[11px] text-slate-600 hidden"></div>
